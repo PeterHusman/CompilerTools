@@ -18,7 +18,7 @@ namespace CompilerCampExercise1
 
         private string ValidateToken(ThingType next)
         {
-            if(tokens[pos].Value != next)
+            if (tokens[pos].Value != next)
             {
                 throw new Exception();
             }
@@ -28,7 +28,7 @@ namespace CompilerCampExercise1
 
         private string GetOptionalToken(ThingType next)
         {
-            if(tokens[pos].Value != next)
+            if (tokens[pos].Value != next)
             {
                 return null;
             }
@@ -61,28 +61,44 @@ namespace CompilerCampExercise1
             return true;
         }
 
-        public void Parse()
+        private KeyValuePair<string, ThingType> GetTokenUnconditionally()
+        {
+            pos++;
+            return tokens[pos - 1];
+        }
+
+        public CompilationUnit Parse()
         {
             CompilationUnit cUnit = new CompilationUnit { Namespace = "global" };
             int braces = 0;
-            if(CheckNextToken(ThingType.NamespaceKeyword))
+            if (CheckNextToken(ThingType.NamespaceKeyword))
             {
                 cUnit.Namespace = ValidateToken(ThingType.Identifier);
                 ValidateToken(ThingType.OpenCurlyBrace);
                 braces++;
             }
 
-            while(pos < tokens.Count)
+            while (pos < tokens.Count)
             {
+                if(CheckNextToken(ThingType.CloseCurlyBrace))
+                {
+                    braces--;
+                    continue;
+                }
                 Class @class = new Class { AccessLevel = AccessLevel.Public };
                 cUnit.Classes.Add(@class);
-                
-                if(TryNextToken(ThingType.AccessModifier, out string accessMod))
+
+                if (TryNextToken(ThingType.AccessModifier, out string accessMod))
                 {
-                    if(accessMod == "private")
+                    if (accessMod == "private")
                     {
                         @class.AccessLevel = AccessLevel.Private;
                     }
+                }
+
+                if(CheckNextToken(ThingType.StaticKeyword))
+                {
+                    @class.Static = true;
                 }
 
                 ValidateToken(ThingType.ClassKeyword);
@@ -92,12 +108,17 @@ namespace CompilerCampExercise1
                 ValidateToken(ThingType.OpenCurlyBrace);
                 braces++;
 
-                while(true)
+                while (true)
                 {
-                    AccessLevel level = AccessLevel.Public;
-                    if(TryNextToken(ThingType.AccessModifier, out string acc))
+                    if(CheckNextToken(ThingType.CloseCurlyBrace))
                     {
-                        if(acc == "private")
+                        braces--;
+                        break;
+                    }
+                    AccessLevel level = AccessLevel.Public;
+                    if (TryNextToken(ThingType.AccessModifier, out string acc))
+                    {
+                        if (acc == "private")
                         {
                             level = AccessLevel.Private;
                         }
@@ -105,31 +126,98 @@ namespace CompilerCampExercise1
 
                     bool @static = TryNextToken(ThingType.StaticKeyword, out _);
 
+                    if(@class.Static && !@static)
+                    {
+                        throw new Exception("if ur class is static ur members gotta be static, too");
+                    }
+
                     string type = ValidateToken(ThingType.Identifier);
                     string name = ValidateToken(ThingType.Identifier);
 
                     if (CheckNextToken(ThingType.Semicolon))
                     {
-                        @class.InstanceFields.Add(new Declaration { Name = name, Type = type });
+                        Declaration decl = new Declaration { Name = name, Type = type };
+                        if (@static)
+                        {
+                            @class.StaticFields.Add(decl);
+                        }
+                        else
+                        {
+                            @class.InstanceFields.Add(decl);
+                        }
                     }
 
                     else if (CheckNextToken(ThingType.EqualsOperator))
                     {
-                        @class.InstanceFields.Add(new DeclarationAssignment { Name = name, Type = type, Value = ParseExpr() });
+                        DeclarationAssignment declAssign = new DeclarationAssignment { Name = name, Type = type, Value = ParseExpr() };
+                        if (@static)
+                        {
+                            @class.StaticFields.Add(declAssign);
+                        }
+                        else
+                        {
+                            @class.InstanceFields.Add(declAssign);
+                        }
                     }
 
                     else if (TryNextToken(ThingType.OpenParenthesis, out _))
                     {
                         Function func = new Function { AccessLevel = level, Name = name, ReturnType = type };
-
-                        while(true)
+                        if(@static)
                         {
-                            if(TryNextToken(ThingType.Identifier, out string pType))
+                            @class.StaticMethods.Add(func);
+                        }
+                        else
+                        {
+                            @class.InstanceMethods.Add(func);
+                        }
+
+                        bool first = true;
+
+                        while (!CheckNextToken(ThingType.CloseParenthesis))
+                        {
+                            if(!first)
+                            {
+                                ValidateToken(ThingType.Comma);
+                            }
+                            first = false;
+                            if (TryNextToken(ThingType.Identifier, out string pType))
                             {
                                 func.Parameters.Add(new Parameter { Type = pType, Name = ValidateToken(ThingType.Identifier) });
                                 continue;
                             }
+                            else
+                            {
+                                throw new Exception();
+                            }
                         }
+
+                        ValidateToken(ThingType.OpenCurlyBrace);
+
+                        UnparsedExprCuzLazy expr = new UnparsedExprCuzLazy();
+                        int tinyBraces = 1;
+                        while(tinyBraces != 0)
+                        {
+                            var t = GetTokenUnconditionally();
+                            if(t.Value == ThingType.OpenCurlyBrace)
+                            {
+                                tinyBraces++;
+                            }
+                            else if(t.Value == ThingType.CloseCurlyBrace)
+                            {
+                                tinyBraces--;
+                            }
+                            else if(t.Value == ThingType.Semicolon)
+                            {
+                                func.Statements.Add(new LazyStatement { LazyExpr = expr });
+                                expr = new UnparsedExprCuzLazy();
+                            }
+                            else
+                            {
+                                expr.Tokens.Add(t);
+                            }
+                        }
+
                     }
 
                     else
@@ -139,16 +227,18 @@ namespace CompilerCampExercise1
                 }
             }
 
-            if(braces != 0)
+            if (braces != 0)
             {
                 throw new Exception();
             }
+
+            return cUnit;
         }
 
         private Expression ParseExpr()
         {
             UnparsedExprCuzLazy unparsedExprCuzLazy = new UnparsedExprCuzLazy();
-            while(!TryNextToken(ThingType.Semicolon, out string semic))
+            while (!TryNextToken(ThingType.Semicolon, out string semic))
             {
                 unparsedExprCuzLazy.Tokens.Add(tokens[pos++]);
             }

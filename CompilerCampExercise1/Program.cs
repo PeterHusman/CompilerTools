@@ -11,18 +11,22 @@ namespace CompilerCampExercise1
 
     public enum ThingType
     {
+        Equality,
         OpenCurlyBrace,
+        BoolLiteral,
         CloseCurlyBrace,
+        LessThan,
         AccessModifier,
         ReturnKeyword,
         StaticKeyword,
         ClassKeyword,
+        IfKeyword,
+        WhileKeyword,
         ClassNameIdentifier,
         NamespaceKeyword,
-        NamespaceIdentifier,
+        StringLiteral,
         Identifier,
         Semicolon,
-        IntTypename,
         NumberLiteral,
         Whitespace,
         Comment,
@@ -59,19 +63,24 @@ namespace CompilerCampExercise1
                 [ThingType.Identifier] = "([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])*",
                 [ThingType.NumberLiteral] = @"[0-9]+",
                 [ThingType.OpenParenthesis] = @"\(",
+                [ThingType.LessThan] = "<",
                 [ThingType.CloseParenthesis] = @"\)",
                 [ThingType.Comma] = ",",
                 [ThingType.EqualsOperator] = "=",
                 [ThingType.PlusOperator] = @"\+",
                 [ThingType.DivideOperator] = @"/",
-                [ThingType.StaticKeyword] = "static"
+                [ThingType.StaticKeyword] = "static",
+                [ThingType.Equality] = "==",
+                [ThingType.BoolLiteral] = "false|true",
+                [ThingType.StringLiteral] = @"\"".*?\""",
+                [ThingType.WhileKeyword] = "while"
             };
 
             #region dont
-            Dictionary<ThingType, string> regexes = new Dictionary<ThingType, string>();
-            foreach(ThingType type in notRealRegexes.Keys)
+            List<KeyValuePair<ThingType, Regex>> regexes = new List<KeyValuePair<ThingType, Regex>>();
+            foreach(ThingType type in notRealRegexes.Keys.OrderBy(a => (int)a))
             {
-                regexes.Add(type, $"^({notRealRegexes[type]})");
+                regexes.Add(new KeyValuePair<ThingType, Regex>(type, new Regex($"^({notRealRegexes[type]})", RegexOptions.Compiled)));
             }
 
             ReadOnlySpan<char> chars = new ReadOnlySpan<char>(input.ToCharArray());
@@ -84,19 +93,20 @@ namespace CompilerCampExercise1
                 string remaining = chars.ToString();
                 //pls
 
-                List<ThingType> types = regexes.Keys.Where(a => Regex.IsMatch(remaining, regexes[a])).OrderBy(a => (int)a).ToList();
+                KeyValuePair<ThingType, Regex>? type = regexes.FirstOrDefault(a => a.Value.IsMatch(remaining));
 
                 //dont
 
-                if(types.Count <= 0)
+                if(type == null || type.Value.Value == null)
                 {
-                    throw new Exception("lol invalid");
+                    throw new Exception("lol invalid, get urself a real token and come back");
                 }
-                ThingType type = types[0];
-                string match = Regex.Match(remaining, regexes[type]).Value;
-                if(!useless.Contains(type))
+                ThingType thingType = type.Value.Key;
+                Regex regex = type.Value.Value;
+                string match = regex.Match(remaining).Value;
+                if(!useless.Contains(thingType))
                 {
-                    thingies.Add(new KeyValuePair<string, ThingType>(match, type));
+                    thingies.Add(new KeyValuePair<string, ThingType>(match, thingType));
                 }
 
                 //remaining = remaining.Remove(0, match.Length);
@@ -113,10 +123,11 @@ namespace CompilerCampExercise1
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
 
-            Console.ReadKey(true);
-
             Phase2 phase2 = new Phase2(thingies);
-            phase2.Parse();
+            CompilationUnit unit = phase2.Parse();
+
+
+            Console.ReadKey(true);
         }
     }
 }

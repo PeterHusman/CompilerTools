@@ -69,6 +69,11 @@ namespace CompilerCampExercise1
         public List<KeyValuePair<string, ThingType>> Tokens { get; set; } = new List<KeyValuePair<string, ThingType>>();
     }
 
+    public class LazyStatement : Statement
+    {
+        public UnparsedExprCuzLazy LazyExpr { get; set; }
+    }
+
     public class Parameter : TreeNode
     {
         public string Name { get; set; }
@@ -95,6 +100,8 @@ namespace CompilerCampExercise1
 
     public class Class : TreeNode
     {
+        public bool Static { get; set; } = false;
+
         public AccessLevel AccessLevel { get; set; }
         public string Name { get; set; }
         public List<Function> InstanceMethods { get; set; } = new List<Function>();
