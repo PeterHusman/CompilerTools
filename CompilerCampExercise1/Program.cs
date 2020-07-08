@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace CompilerCampExercise1
 {
 
-    enum ThingType
+    public enum ThingType
     {
         OpenCurlyBrace,
         CloseCurlyBrace,
@@ -41,7 +41,8 @@ namespace CompilerCampExercise1
         //World's worst tokenizer, do not use
         static void Main(string[] args)
         {
-            string input = File.ReadAllText(@"C:\Users\Peter.Husman\source\repos\CompilerCampExercise1\CompilerCampExercise1\Test.cs");
+            //C:\Users\Peter.Husman\source\repos\CompilerCampExercise1\CompilerCampExercise1\
+            string input = File.ReadAllText(@"../../Test.cs");
 
             List<KeyValuePair<string, ThingType>> thingies = new List<KeyValuePair<string, ThingType>>();
 
@@ -113,6 +114,9 @@ namespace CompilerCampExercise1
             }
 
             Console.ReadKey(true);
+
+            Phase2 phase2 = new Phase2(thingies);
+            phase2.Parse();
         }
     }
 }
