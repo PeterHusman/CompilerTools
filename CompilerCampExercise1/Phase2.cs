@@ -67,6 +67,34 @@ namespace CompilerCampExercise1
             return tokens[pos - 1];
         }
 
+
+
+        List<Parameter> ParseParams()
+        {
+            List<Parameter> @params = new List<Parameter>();
+
+            bool first = true;
+            while (!CheckNextToken(ThingType.CloseParenthesis))
+            {
+                if (!first)
+                {
+                    ValidateToken(ThingType.Comma);
+                }
+                first = false;
+                if (TryNextToken(ThingType.Identifier, out string pType))
+                {
+                    @params.Add(new Parameter { Type = ParseNamespacedThingStartingWith(pType), Name = ValidateToken(ThingType.Identifier) });
+                    continue;
+                }
+                else
+                {
+                    throw new Exception();
+                }
+            }
+
+            return @params;
+        }
+
         public CompilationUnit Parse()
         {
             CompilationUnit cUnit = new CompilationUnit { Namespace = "global" };
@@ -105,6 +133,30 @@ namespace CompilerCampExercise1
 
                 @class.Name = ValidateToken(ThingType.Identifier);
 
+                if(CheckNextToken(ThingType.OpenParenthesis))
+                {
+                    if(@class.Static)
+                    {
+                        throw new Exception("pls no, if its a record then it dont be static");
+                    }
+                    List<Parameter> fields = ParseParams();
+                    List<Declaration> decls = fields.Select(a => new Declaration { Name = a.Name, Type = a.Type }).ToList();
+                    @class.InstanceFields = decls;
+                    Function func = new Function { AccessLevel = @class.AccessLevel, Name = ".ctor", ReturnType = null, Parameters = fields };
+                    @class.InstanceMethods.Add(func);
+                    @class.Ctor = func;
+                    foreach(Declaration decl in decls)
+                    {
+                        Assignment assignment = new Assignment();
+                        assignment.LHS = new NamespacedThing { Parent = new NamespacedThing { Name = "this", Parent = null }, Name = decl.Name };
+                        assignment.RHS = new GetVariableOrField { Value = new NamespacedThing { Parent = null, Name = decl.Name } };
+                        func.Statements.Add(assignment);
+                    }
+
+                    ValidateToken(ThingType.Semicolon);
+                    continue;
+                }
+
                 ValidateToken(ThingType.OpenCurlyBrace);
                 braces++;
 
@@ -126,13 +178,40 @@ namespace CompilerCampExercise1
 
                     bool @static = TryNextToken(ThingType.StaticKeyword, out _);
 
+                    bool isEntryPoint = false;
+
                     if(@class.Static && !@static)
                     {
                         throw new Exception("if ur class is static ur members gotta be static, too");
                     }
 
-                    string type = ValidateToken(ThingType.Identifier);
-                    string name = ValidateToken(ThingType.Identifier);
+                    if(@static && CheckNextToken(ThingType.EntrypointKeyword))
+                    {
+                        if(cUnit.EntryPoint != null)
+                        {
+                            throw new Exception("pls onlee hav won ntree point");
+                        }
+
+                        isEntryPoint = true;
+                    }
+
+                    NamespacedThing type = ParseNamespacedThing();
+                    string name;
+                    bool isCtor = false;
+                    if(type.Name == @class.Name && type.Parent == null)
+                    {
+                        if(@class.Ctor != null)
+                        {
+                            throw new Exception("pls onlee hav won seetorr");
+                        }
+                        isCtor = true;
+                        ValidateToken(ThingType.OpenParenthesis);
+                        name = ".ctor";
+                    }
+                    else
+                    {
+                        name = ValidateToken(ThingType.Identifier);
+                    }
 
                     if (CheckNextToken(ThingType.Semicolon))
                     {
@@ -144,6 +223,11 @@ namespace CompilerCampExercise1
                         else
                         {
                             @class.InstanceFields.Add(decl);
+                        }
+
+                        if(isEntryPoint)
+                        {
+                            throw new Exception("what is that even supposed to mean");
                         }
                     }
 
@@ -158,9 +242,14 @@ namespace CompilerCampExercise1
                         {
                             @class.InstanceFields.Add(declAssign);
                         }
+
+                        if (isEntryPoint)
+                        {
+                            throw new Exception("what is that even supposed to mean");
+                        }
                     }
 
-                    else if (TryNextToken(ThingType.OpenParenthesis, out _))
+                    else if (isCtor || TryNextToken(ThingType.OpenParenthesis, out _))
                     {
                         Function func = new Function { AccessLevel = level, Name = name, ReturnType = type };
                         if(@static)
@@ -172,25 +261,17 @@ namespace CompilerCampExercise1
                             @class.InstanceMethods.Add(func);
                         }
 
-                        bool first = true;
-
-                        while (!CheckNextToken(ThingType.CloseParenthesis))
+                        if(isEntryPoint)
                         {
-                            if(!first)
-                            {
-                                ValidateToken(ThingType.Comma);
-                            }
-                            first = false;
-                            if (TryNextToken(ThingType.Identifier, out string pType))
-                            {
-                                func.Parameters.Add(new Parameter { Type = pType, Name = ValidateToken(ThingType.Identifier) });
-                                continue;
-                            }
-                            else
-                            {
-                                throw new Exception();
-                            }
+                            cUnit.EntryPoint = func;
                         }
+
+                        if(isCtor)
+                        {
+                            @class.Ctor = func;
+                        }
+
+                        func.Parameters = ParseParams();
 
                         ValidateToken(ThingType.OpenCurlyBrace);
 
@@ -233,6 +314,29 @@ namespace CompilerCampExercise1
             }
 
             return cUnit;
+        }
+
+        NamespacedThing ParseNamespacedThing()
+        {
+            return ParseNamespacedThingStartingWith(ValidateToken(ThingType.Identifier));
+        }
+
+        NamespacedThing ParseNamespacedThingStartingWith(string start)
+        {
+            NamespacedThing current = new NamespacedThing();
+            string name = start;
+            current.Name = name;
+            while (CheckNextToken(ThingType.DotOperator))
+            {
+                NamespacedThing thing = new NamespacedThing();
+                thing.Parent = current;
+                current = thing;
+
+                name = ValidateToken(ThingType.Identifier);
+                current.Name = name;
+            }
+
+            return current;
         }
 
         private Expression ParseExpr()

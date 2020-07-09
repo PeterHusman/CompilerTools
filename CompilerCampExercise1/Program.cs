@@ -12,11 +12,16 @@ namespace CompilerCampExercise1
     public enum ThingType
     {
         Equality,
+        NotEquals,
+        Not,
+        DotOperator,
         OpenCurlyBrace,
         BoolLiteral,
         CloseCurlyBrace,
         LessThan,
+        GreaterThan,
         AccessModifier,
+        EntrypointKeyword,
         ReturnKeyword,
         StaticKeyword,
         ClassKeyword,
@@ -28,6 +33,7 @@ namespace CompilerCampExercise1
         Identifier,
         Semicolon,
         NumberLiteral,
+        MinusOperator,
         Whitespace,
         Comment,
         OpenParenthesis,
@@ -51,6 +57,7 @@ namespace CompilerCampExercise1
             List<KeyValuePair<string, ThingType>> thingies = new List<KeyValuePair<string, ThingType>>();
 
             Dictionary<ThingType, string> notRealRegexes = new Dictionary<ThingType, string> {
+                [ThingType.EntrypointKeyword] = "entrypoint",
                 [ThingType.ClassKeyword] = "class",
                 [ThingType.AccessModifier] = "public|private",
                 [ThingType.NamespaceKeyword] = "namespace",
@@ -73,7 +80,12 @@ namespace CompilerCampExercise1
                 [ThingType.Equality] = "==",
                 [ThingType.BoolLiteral] = "false|true",
                 [ThingType.StringLiteral] = @"\"".*?\""",
-                [ThingType.WhileKeyword] = "while"
+                [ThingType.WhileKeyword] = "while",
+                [ThingType.MinusOperator] = "-",
+                [ThingType.DotOperator] = @"\.",
+                [ThingType.GreaterThan] = ">",
+                [ThingType.NotEquals] = "!=",
+                [ThingType.Not] = "!"
             };
 
             #region dont

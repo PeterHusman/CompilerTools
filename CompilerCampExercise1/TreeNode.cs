@@ -25,7 +25,7 @@ namespace CompilerCampExercise1
 
         public string Name { get; set; }
 
-        public string ReturnType { get; set; }
+        public NamespacedThing ReturnType { get; set; }
     }
 
     public abstract class Statement : TreeNode
@@ -35,7 +35,13 @@ namespace CompilerCampExercise1
 
     public class Assignment : Statement
     {
+        public NamespacedThing LHS { get; set; }
+        public Expression RHS { get; set; }
+    }
 
+    public class GetVariableOrField : Expression
+    {
+        public NamespacedThing Value { get; set; }
     }
 
     public class Call : Statement
@@ -51,7 +57,7 @@ namespace CompilerCampExercise1
     public class Declaration : Statement
     {
         public string Name { get; set; }
-        public string Type { get; set; }
+        public NamespacedThing Type { get; set; }
     }
 
     public class DeclarationAssignment : Declaration
@@ -62,6 +68,12 @@ namespace CompilerCampExercise1
     public abstract class Expression : TreeNode
     {
 
+    }
+
+    public class NamespacedThing : TreeNode
+    {
+        public NamespacedThing Parent { get; set; }
+        public string Name { get; set; }
     }
 
     public class UnparsedExprCuzLazy : Expression
@@ -77,14 +89,8 @@ namespace CompilerCampExercise1
     public class Parameter : TreeNode
     {
         public string Name { get; set; }
-        public string Type { get; set; }
+        public NamespacedThing Type { get; set; }
     }
-
-
-    //public class Field : ClassMember
-    //{
-    //    public string Type { get; set; }
-    //}
 
     public abstract class ClassMember : TreeNode
     {
@@ -95,11 +101,21 @@ namespace CompilerCampExercise1
     {
         public string Namespace { get; set; }
 
+        public Function EntryPoint { get; set; } = null;
+
         public List<Class> Classes { get; set; } = new List<Class>();
     }
 
     public class Class : TreeNode
     {
+        public override string ToString()
+        {
+            return Name;
+        }
+
+
+        public Function Ctor { get; set; } = null;
+
         public bool Static { get; set; } = false;
 
         public AccessLevel AccessLevel { get; set; }

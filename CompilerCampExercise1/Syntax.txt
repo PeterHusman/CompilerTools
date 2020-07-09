@@ -1,0 +1,58 @@
+﻿//Tokens:
+// basically normal
+
+//Class definitions:
+// - Can optionally be inside namespace
+// - Have 2 forms
+
+//Class form 1:
+[optional access modifier] [optional static] class <class name>
+{
+	[fields]
+	[methods]
+}
+
+//Class form 2:
+[optional access modifier] class <class name> (<field 1 type> <field 1 name>, [field 2 type] [field 2 name], ...);
+
+//Field definitions and variable declarations look the same, as one of two allowed forms
+<type> <name>;
+<type> <name> = <default value expression>;
+
+//Method definitions have the following form. Methods can only be marked entrypoint if they are also marked static.
+[optional access modifier] [optional static] [optional entrypoint] <return type> <name> ([parameter 1 type] [parameter 1 name], ...)
+{
+	[body]
+}
+
+//Constructors are of the form
+[optional access modifier] <class name> ([parameter 1 type] [parameter 1 name], ...)
+{
+	[body]
+}
+
+//Function bodies are sequences of statements, if statements, and while loops
+
+//Statements can be assignments, function calls, increments, decrements, and return statements.
+//For the following, <variable or field> and <function> can be of the form <name> or <name>.<name> for any number of .<name>s
+<variable or field> = <expr>;
+<function>(<parameters>);
+return <expr>;
+//The following only applies to numeric variables and fields (++ and -- cannot be defined for custom types)
+<variable or field>++;
+<variable or field>--;
+
+//If statements are of this form
+//<condition> is a boolean expression
+if(<condition>)
+{
+	[body]
+}
+
+//While loops are of this form
+while(<condition>)
+{
+	[body]
+}
+
+//Expressions
