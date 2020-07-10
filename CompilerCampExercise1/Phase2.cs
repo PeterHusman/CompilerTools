@@ -339,7 +339,7 @@ namespace CompilerCampExercise1
             return current;
         }
 
-        private Expression ParseExpr()
+        private Expression ParseExpr(ThingType finish)
         {
             UnparsedExprCuzLazy unparsedExprCuzLazy = new UnparsedExprCuzLazy();
             while (!TryNextToken(ThingType.Semicolon, out string semic))
@@ -347,6 +347,29 @@ namespace CompilerCampExercise1
                 unparsedExprCuzLazy.Tokens.Add(tokens[pos++]);
             }
             return unparsedExprCuzLazy;
+
+            Stack<Expression> opStack = new Stack<Expression>();
+            Queue<Expression> output = new Queue<Expression>();
+            while(true)
+            {
+                var token = GetTokenUnconditionally();
+
+                if(token.Value == ThingType.IntLiteral)
+                {
+                    int num = int.Parse(token.Key);
+                    output.Enqueue(new ConstantIntExpression { Value = num });
+                    continue;
+                }
+
+                if(token.Value == ThingType.Identifier)
+                {
+                    NamespacedThing thing = ParseNamespacedThingStartingWith(token.Key);
+                    if(CheckNextToken(ThingType.OpenParenthesis))
+                    {
+                        
+                    }
+                }
+            }
         }
     }
 }

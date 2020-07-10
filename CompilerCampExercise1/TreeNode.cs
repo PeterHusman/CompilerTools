@@ -28,7 +28,7 @@ namespace CompilerCampExercise1
         public NamespacedThing ReturnType { get; set; }
     }
 
-    public abstract class Statement : TreeNode
+    public abstract class Statement : Expression
     {
 
     }
@@ -38,6 +38,68 @@ namespace CompilerCampExercise1
         public NamespacedThing LHS { get; set; }
         public Expression RHS { get; set; }
     }
+
+    public class FunctionCall : Statement
+    {
+        public NamespacedThing FunctionName { get; set; }
+        public List<Expression> Parameter { get; set; }
+    }
+
+    public abstract class ConstantExpression : Expression
+    {
+
+    }
+
+    public class ConstantIntExpression : ConstantExpression
+    {
+        public int Value { get; set; }
+    }
+
+    public class ConstantBooleanExpression : ConstantExpression
+    {
+        public bool Value { get; set; }
+    }
+
+    public abstract class BinaryExpression : Expression
+    {
+        public Expression LHS { get; set; }
+        public Expression RHS { get; set; }
+    }
+
+    public enum Associativity
+    {
+        Left,
+        Right
+    }
+
+    public class AdditionExpression : BinaryExpression
+    {
+        public const int Precedence = 2;
+
+        public const Associativity Associative = Associativity.Left;
+    }
+
+    public class SubtractionExpression : BinaryExpression
+    {
+        public const int Precedence = 2;
+
+        public const Associativity Associative = Associativity.Left;
+    }
+
+    public class MultiplicationExpression : BinaryExpression
+    {
+        public const int Precedence = 3;
+
+        public const Associativity Associative = Associativity.Left;
+    }
+
+    public class DivisionExpression : BinaryExpression
+    {
+        public const int Precedence = 3;
+
+        public const Associativity Associative = Associativity.Left;
+    }
+
 
     public class GetVariableOrField : Expression
     {
@@ -105,6 +167,8 @@ namespace CompilerCampExercise1
 
         public List<Class> Classes { get; set; } = new List<Class>();
     }
+
+
 
     public class Class : TreeNode
     {
