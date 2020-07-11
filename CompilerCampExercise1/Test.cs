@@ -2,7 +2,7 @@
 {
     class Test
     {
-        private static string strstr;
+        private static string strstr = "\"";
 
         public bool False = false;
 

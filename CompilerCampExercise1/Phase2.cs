@@ -233,7 +233,7 @@ namespace CompilerCampExercise1
 
                     else if (CheckNextToken(ThingType.EqualsOperator))
                     {
-                        DeclarationAssignment declAssign = new DeclarationAssignment { Name = name, Type = type, Value = ParseExpr() };
+                        DeclarationAssignment declAssign = new DeclarationAssignment { Name = name, Type = type, Value = ParseExpr(ThingType.Semicolon) };
                         if (@static)
                         {
                             @class.StaticFields.Add(declAssign);
