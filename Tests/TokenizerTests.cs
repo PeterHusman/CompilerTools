@@ -38,13 +38,14 @@ namespace Tests
         [TestMethod]
         public void EdgeCases()
         {
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize("=== \"\\\"\"  \"\\\\\"");
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize("=== \"\\\"\"  \"\\\\\" classname");
 
             List<KeyValuePair<string, ThingType>> correct = new List<KeyValuePair<string, ThingType>> {
                 new KeyValuePair<string, ThingType>("==", ThingType.Equality),
                 new KeyValuePair<string, ThingType>("=", ThingType.EqualsOperator),
                 new KeyValuePair<string, ThingType>("\"\\\"\"", ThingType.StringLiteral),
                 new KeyValuePair<string, ThingType>("\"\\\\\"", ThingType.StringLiteral),
+                new KeyValuePair<string, ThingType>("classname", ThingType.Identifier)
             };
 
             Assert.AreEqual(thingies.Count, correct.Count);
