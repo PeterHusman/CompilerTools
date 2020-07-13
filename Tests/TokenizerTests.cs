@@ -11,7 +11,7 @@ namespace Tests
         [TestMethod]
         public void BasicTests()
         {
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(DSharpThings.TokenDefinitions, DSharpThings.IgnoredTokens).Tokenize("== = ><+-identifier class namespace int Class");
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize("== = ><+-identifier class namespace int Class");
 
             List<KeyValuePair<string, ThingType>> correct = new List<KeyValuePair<string, ThingType>> {
                 new KeyValuePair<string, ThingType>("==", ThingType.Equality),
@@ -38,7 +38,7 @@ namespace Tests
         [TestMethod]
         public void EdgeCases()
         {
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(DSharpThings.TokenDefinitions, DSharpThings.IgnoredTokens).Tokenize("=== \"\\\"\"  \"\\\\\"");
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize("=== \"\\\"\"  \"\\\\\"");
 
             List<KeyValuePair<string, ThingType>> correct = new List<KeyValuePair<string, ThingType>> {
                 new KeyValuePair<string, ThingType>("==", ThingType.Equality),

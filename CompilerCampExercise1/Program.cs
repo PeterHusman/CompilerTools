@@ -51,7 +51,7 @@ namespace CompilerCampExercise1
             //C:\Users\Peter.Husman\source\repos\CompilerCampExercise1\CompilerCampExercise1\
             string input = File.ReadAllText(@"../../Test.cs");
 
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(DSharpThings.TokenDefinitions, DSharpThings.IgnoredTokens).Tokenize(input);
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize(input);
 
             foreach (var v in thingies)
             {

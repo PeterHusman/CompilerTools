@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace CompilerCampExercise1
 {
-    public static class DSharpThings
+    public static class CauliflowerThings
     {
         public static Dictionary<ThingType, string> TokenDefinitions = new Dictionary<ThingType, string>
         {
