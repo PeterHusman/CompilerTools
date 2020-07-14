@@ -42,7 +42,7 @@ namespace CompilerCampExercise1
     public class FunctionCall : Statement
     {
         public NamespacedThing FunctionName { get; set; }
-        public List<Expression> Parameter { get; set; }
+        public List<Expression> Parameters { get; set; }
     }
 
     public abstract class ConstantExpression : Expression

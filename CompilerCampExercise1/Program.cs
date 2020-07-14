@@ -41,7 +41,8 @@ namespace CompilerCampExercise1
         Comma,
         EqualsOperator,
         PlusOperator,
-        DivideOperator
+        DivideOperator,
+        MultiplyOperator
     }
     class Program
     {

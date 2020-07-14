@@ -233,7 +233,7 @@ namespace CompilerCampExercise1
 
                     else if (CheckNextToken(ThingType.EqualsOperator))
                     {
-                        DeclarationAssignment declAssign = new DeclarationAssignment { Name = name, Type = type, Value = ParseExpr(ThingType.Semicolon) };
+                        DeclarationAssignment declAssign = new DeclarationAssignment { Name = name, Type = type, Value = ParseExpr(false, false, true, out _) };
                         if (@static)
                         {
                             @class.StaticFields.Add(declAssign);
@@ -339,16 +339,17 @@ namespace CompilerCampExercise1
             return current;
         }
 
-        private Expression ParseExpr(ThingType finish)
+        private Expression ParseExpr(bool finishOnCloseParen, bool finishOnComma, bool finishOnSemicolon, out ThingType finishedToken)
         {
             UnparsedExprCuzLazy unparsedExprCuzLazy = new UnparsedExprCuzLazy();
             while (!TryNextToken(ThingType.Semicolon, out string semic))
             {
                 unparsedExprCuzLazy.Tokens.Add(tokens[pos++]);
             }
+            finishedToken = ThingType.Semicolon;
             return unparsedExprCuzLazy;
 
-            Stack<Expression> opStack = new Stack<Expression>();
+            Stack<ThingType> opStack = new Stack<ThingType>();
             Queue<Expression> output = new Queue<Expression>();
             while(true)
             {
@@ -366,9 +367,31 @@ namespace CompilerCampExercise1
                     NamespacedThing thing = ParseNamespacedThingStartingWith(token.Key);
                     if(CheckNextToken(ThingType.OpenParenthesis))
                     {
-                        
+                        List<Expression> parameters = new List<Expression>();
+
+                        if(!CheckNextToken(ThingType.CloseParenthesis))
+                        {
+                            ThingType tType;
+
+                            do
+                            {
+                                Expression expr = ParseExpr(true, true, false, out tType);
+                                parameters.Add(expr);
+                            } while (tType != ThingType.CloseParenthesis);
+                        }
+
+                        output.Enqueue(new FunctionCall() { FunctionName = thing, Parameters = parameters });
                     }
+                    else
+                    {
+                        output.Enqueue(new GetVariableOrField { Value = thing });
+                    }
+
+                    continue;
                 }
+
+
+                //if(token.Value == ThingType.PlusOperator || token.Value == ThingType.MinusOperator || token.Value == ThingType.DivideOperator || token.Value == ThingType.MultiplyOperator)
             }
         }
     }
