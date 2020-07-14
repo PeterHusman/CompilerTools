@@ -5,27 +5,27 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace CompilerCampExercise1
+namespace Tokenizer
 {
-    public class Tokenizer
+    public class Tokenizer<T> where T : Enum
     {
-        public List<KeyValuePair<ThingType, Regex>> Regexes { get; set; } = new List<KeyValuePair<ThingType, Regex>>();
+        public List<KeyValuePair<T, Regex>> Regexes { get; set; } = new List<KeyValuePair<T, Regex>>();
 
-        public HashSet<ThingType> Useless { get; set; }
+        public HashSet<T> Useless { get; set; }
 
-        public Tokenizer(Dictionary<ThingType, string> notRealRegexes, HashSet<ThingType> useless)
+        public Tokenizer(Dictionary<T, string> notRealRegexes, HashSet<T> useless, Func<T, int> precedence)
         {
-            foreach (ThingType type in notRealRegexes.Keys.OrderBy(a => (int)a))
+            foreach (T type in notRealRegexes.Keys.OrderBy(a => precedence(a)))
             {
-                Regexes.Add(new KeyValuePair<ThingType, Regex>(type, new Regex($"\\G({notRealRegexes[type]})", RegexOptions.Compiled)));
+                Regexes.Add(new KeyValuePair<T, Regex>(type, new Regex($"\\G({notRealRegexes[type]})", RegexOptions.Compiled)));
             }
 
             Useless = useless;
         }
 
-        public List<KeyValuePair<string, ThingType>> Tokenize(string input)
+        public List<KeyValuePair<string, T>> Tokenize(string input)
         {
-            List<KeyValuePair<string, ThingType>> thingies = new List<KeyValuePair<string, ThingType>>();
+            List<KeyValuePair<string, T>> thingies = new List<KeyValuePair<string, T>>();
 
             int startingPos = 0;
 
@@ -34,18 +34,18 @@ namespace CompilerCampExercise1
             //Again, do not use
             while (startingPos < input.Length)
             {
-                KeyValuePair<ThingType, Regex>? type = Regexes.FirstOrDefault(a => a.Value.IsMatch(input, startingPos));
+                KeyValuePair<T, Regex>? type = Regexes.FirstOrDefault(a => a.Value.IsMatch(input, startingPos));
 
                 if (type == null || type.Value.Value == null)
                 {
                     throw new Exception($"lol invalid, get urself a real token and come back ({input.Substring(startingPos, 10)})");
                 }
-                ThingType thingType = type.Value.Key;
+                T thingType = type.Value.Key;
                 Regex regex = type.Value.Value;
                 string match = regex.Match(input, startingPos).Value;
                 if (!Useless.Contains(thingType))
                 {
-                    thingies.Add(new KeyValuePair<string, ThingType>(match, thingType));
+                    thingies.Add(new KeyValuePair<string, T>(match, thingType));
                 }
 
                 //remaining = remaining.Remove(0, match.Length);

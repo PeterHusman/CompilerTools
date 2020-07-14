@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CompilerCampExercise1;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Tokenizer;
 
 namespace Tests
 {
@@ -11,7 +12,7 @@ namespace Tests
         [TestMethod]
         public void BasicTests()
         {
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize("== = ><+-identifier class namespace int Class");
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a).Tokenize("== = ><+-identifier class namespace int Class");
 
             List<KeyValuePair<string, ThingType>> correct = new List<KeyValuePair<string, ThingType>> {
                 new KeyValuePair<string, ThingType>("==", ThingType.Equality),
@@ -38,7 +39,7 @@ namespace Tests
         [TestMethod]
         public void EdgeCases()
         {
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize("=== \"\\\"\"  \"\\\\\" classname");
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a).Tokenize("=== \"\\\"\"  \"\\\\\" classname");
 
             List<KeyValuePair<string, ThingType>> correct = new List<KeyValuePair<string, ThingType>> {
                 new KeyValuePair<string, ThingType>("==", ThingType.Equality),

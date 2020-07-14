@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Tokenizer;
 
 namespace CompilerCampExercise1
 {
@@ -52,7 +53,7 @@ namespace CompilerCampExercise1
             //C:\Users\Peter.Husman\source\repos\CompilerCampExercise1\CompilerCampExercise1\
             string input = File.ReadAllText(@"../../Test.cs");
 
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens).Tokenize(input);
+            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a).Tokenize(input);
 
             foreach (var v in thingies)
             {

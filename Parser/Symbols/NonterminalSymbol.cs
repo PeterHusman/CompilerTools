@@ -8,7 +8,7 @@ namespace Parser.Symbols
 {
     public class NonterminalSymbol<T> : Symbol<T> where T : Enum
     {
-        public Production<T>[] Productions { get; }
+        public Production<T>[] Productions { get; set; }
         public string Name { get; }
 
         public NonterminalSymbol(Production<T>[] prods, string name)

@@ -60,6 +60,10 @@
       <Project>{CF2B21F5-CF65-4594-819D-0C1E6067E452}</Project>
       <Name>CompilerCampExercise1</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Tokenizer\Tokenizer.csproj">
+      <Project>{F23A5C7A-BD1E-44A9-84CD-66D09880A6B5}</Project>
+      <Name>Tokenizer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

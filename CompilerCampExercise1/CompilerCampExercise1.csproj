@@ -61,7 +61,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <AdditionalFiles Include="Test.cs" />
-    <Compile Include="Tokenizer.cs" />
     <Compile Include="TreeNode.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +69,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Syntax.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tokenizer\Tokenizer.csproj">
+      <Project>{F23A5C7A-BD1E-44A9-84CD-66D09880A6B5}</Project>
+      <Name>Tokenizer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
