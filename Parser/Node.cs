@@ -8,5 +8,6 @@ namespace Parser
 {
     public abstract class Node
     {
+        public abstract string FullToString { get; }
     }
 }

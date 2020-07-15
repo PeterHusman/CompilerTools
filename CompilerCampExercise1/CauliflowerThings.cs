@@ -39,7 +39,9 @@ namespace CompilerCampExercise1
             [ThingType.DotOperator] = @"\.",
             [ThingType.GreaterThan] = ">",
             [ThingType.NotEquals] = "!=",
-            [ThingType.Not] = "!"
+            [ThingType.Not] = "!",
+            [ThingType.Increment] = "\\+\\+",
+            [ThingType.Decrement] = "--"
         };
 
         public static HashSet<ThingType> IgnoredTokens = new HashSet<ThingType> { ThingType.Whitespace, ThingType.Comment };

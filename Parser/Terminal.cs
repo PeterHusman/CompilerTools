@@ -10,5 +10,14 @@ namespace Parser
     {
         public T TokenType { get; set; }
         public string TokenValue { get; set; }
+
+        public override string FullToString => TokenType.ToString();
+
+        public override string ToString()
+        {
+            return TokenType.ToString();
+        }
+
+
     }
 }

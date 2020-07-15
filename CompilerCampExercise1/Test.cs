@@ -4,6 +4,8 @@
     {
         private static string strstr = "\"";
 
+        public int LetsGo = 1+ 2 - 3 * 4 /5 + 6;
+
         public bool False = false;
 
         static int AverageTwoNumbers(int a, int b)

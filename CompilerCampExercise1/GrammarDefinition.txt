@@ -1,0 +1,10 @@
+﻿Factor = OpenParenthesis Expression CloseParenthesis
+       | IntLiteral
+
+Term = Term MultiplyOperator Factor
+	 | Term DivideOperator Factor
+	 | Factor
+
+Expression = Expression PlusOperator Term
+		   | Expression MinusOperator Term
+		   | Term

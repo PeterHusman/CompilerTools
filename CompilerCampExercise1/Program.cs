@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Parser;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +14,8 @@ namespace CompilerCampExercise1
     public enum ThingType
     {
         Equality,
+        Increment,
+        Decrement,
         NotEquals,
         Not,
         DotOperator,
@@ -34,13 +37,13 @@ namespace CompilerCampExercise1
         Identifier,
         Semicolon,
         IntLiteral,
-        MinusOperator,
         Whitespace,
         Comment,
         OpenParenthesis,
         CloseParenthesis,
         Comma,
         EqualsOperator,
+        MinusOperator,
         PlusOperator,
         DivideOperator,
         MultiplyOperator
@@ -53,12 +56,22 @@ namespace CompilerCampExercise1
             //C:\Users\Peter.Husman\source\repos\CompilerCampExercise1\CompilerCampExercise1\
             string input = File.ReadAllText(@"../../Test.cs");
 
-            List<KeyValuePair<string, ThingType>> thingies = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a).Tokenize(input);
+            var tokenizer = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a);
+
+            List<KeyValuePair<string, ThingType>> thingies = tokenizer.Tokenize(input);
+
+            Span<KeyValuePair<string, ThingType>> tokens = new Span<KeyValuePair<string, ThingType>>(thingies.ToArray());
 
             foreach (var v in thingies)
             {
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
+
+            //Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
+
+            //BottomUpParser<ThingType> parser = new BottomUpParser<ThingType>(grammar);
+
+            //NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize("1 + 2 - 3*4/5 + 6"));
 
             Phase2 phase2 = new Phase2(thingies);
             CompilationUnit unit = phase2.Parse();

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Parser.Symbols
 {
-    public class NonterminalSymbol<T> : Symbol<T> where T : Enum
+    public class NonterminalSymbol<T> : Symbol<T>, IEquatable<NonterminalSymbol<T>> where T : Enum
     {
         public Production<T>[] Productions { get; set; }
         public string Name { get; }
@@ -30,6 +30,27 @@ namespace Parser.Symbols
             }
 
             return null;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if(!(obj is NonterminalSymbol<T> nonterm))
+            {
+                return false;
+            }
+
+            return nonterm.Name == Name;
+        }
+
+        public bool Equals(NonterminalSymbol<T> other)
+        {
+            return other != null &&
+                   Name == other.Name;
+        }
+
+        public override int GetHashCode()
+        {
+            return 539060726 + EqualityComparer<string>.Default.GetHashCode(Name);
         }
     }
 }

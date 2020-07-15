@@ -50,6 +50,11 @@ namespace CompilerCampExercise1
 
     }
 
+    public class ConstantStringExpression : ConstantExpression
+    {
+        public string Value { get; set; }
+    }
+
     public class ConstantIntExpression : ConstantExpression
     {
         public int Value { get; set; }
@@ -106,6 +111,16 @@ namespace CompilerCampExercise1
         public NamespacedThing Value { get; set; }
     }
 
+    public class IncrementExpression : Statement
+    {
+        public NamespacedThing Value { get; set; }
+    }
+
+    public class DecrementExpression : Statement
+    {
+        public NamespacedThing Value { get; set; }
+    }
+
     public class Call : Statement
     {
 
@@ -138,11 +153,13 @@ namespace CompilerCampExercise1
         public string Name { get; set; }
     }
 
+    [Obsolete]
     public class UnparsedExprCuzLazy : Expression
     {
         public List<KeyValuePair<string, ThingType>> Tokens { get; set; } = new List<KeyValuePair<string, ThingType>>();
     }
 
+    [Obsolete]
     public class LazyStatement : Statement
     {
         public UnparsedExprCuzLazy LazyExpr { get; set; }

@@ -68,9 +68,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="GrammarDefinition.txt" />
     <Content Include="Syntax.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Parser\Parser.csproj">
+      <Project>{2E1D09E1-2C04-4A7B-A223-189A5E07BDB4}</Project>
+      <Name>Parser</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Tokenizer\Tokenizer.csproj">
       <Project>{F23A5C7A-BD1E-44A9-84CD-66D09880A6B5}</Project>
       <Name>Tokenizer</Name>

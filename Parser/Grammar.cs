@@ -49,33 +49,65 @@ namespace Parser
             List<Symbol<T>> symbols = new List<Symbol<T>>();
 
             Dictionary<string, NonterminalSymbol<T>> nonterms = new Dictionary<string, NonterminalSymbol<T>>();
-            foreach(var tokenThing in tokenStream)
-            {
-                throw new NotImplementedException("TODO: Implement nonterm searching");
-            }
 
             int state = 0;
-            foreach(var tokenThing in tokenStream)
-            {
-                GrammarTokenType tokenType = tokenThing.Value;
-                string tokenValue = tokenThing.Key;
 
-                switch(state)
+            foreach (var tokenThing in tokenStream)
+            {
+                switch (state)
                 {
                     case 0:
-                        if(tokenType != GrammarTokenType.Identifier && tokenType != GrammarTokenType.Pipe)
+                        if(tokenThing.Value == GrammarTokenType.Newline)
+                        {
+                            break;
+                        }
+                        if (tokenThing.Value != GrammarTokenType.Identifier && tokenThing.Value != GrammarTokenType.Pipe)
                         {
                             throw new Exception();
                         }
-                        if(tokenType == GrammarTokenType.Identifier)
+                        if (tokenThing.Value == GrammarTokenType.Identifier)
                         {
-                            currentLeft = nonterms[tokenValue];
-                            leftProds = new List<Production<T>>();
+                            nonterms.Add(tokenThing.Key, new NonterminalSymbol<T>(null, tokenThing.Key));
                         }
                         state = 1;
                         break;
                     case 1:
+                        if (tokenThing.Value == GrammarTokenType.Newline)
+                        {
+                            state = 0;
+                        }
+                        break;
+                }
+            }
+
+            state = 0;
+            foreach (var token in tokenStream)
+            {
+                GrammarTokenType tokenType = token.Value;
+                string tokenValue = token.Key;
+
+                switch (state)
+                {
+                    case 0:
                         if(tokenType == GrammarTokenType.Newline)
+                        {
+                            break;
+                        }
+                        if (tokenType != GrammarTokenType.Identifier && tokenType != GrammarTokenType.Pipe)
+                        {
+                            throw new Exception();
+                        }
+                        if (tokenType == GrammarTokenType.Identifier)
+                        {
+                            currentLeft = nonterms[tokenValue];
+                            leftProds = new List<Production<T>>();
+                            state = 2;
+                            break;
+                        }
+                        state = 1;
+                        break;
+                    case 1:
+                        if (tokenType == GrammarTokenType.Newline)
                         {
                             var prod = new Production<T>(symbols.ToArray(), currentLeft);
                             leftProds.Add(prod);
@@ -86,9 +118,9 @@ namespace Parser
                             break;
                         }
 
-                        if(tokenType == GrammarTokenType.Identifier)
+                        if (tokenType == GrammarTokenType.Identifier)
                         {
-                            if(nonterms.ContainsKey(tokenValue))
+                            if (nonterms.ContainsKey(tokenValue))
                             {
                                 symbols.Add(nonterms[tokenValue]);
                             }
@@ -102,10 +134,17 @@ namespace Parser
                             throw new Exception();
                         }
                         break;
+                    case 2:
+                        if(tokenType == GrammarTokenType.Equals)
+                        {
+                            state = 1;
+                            break;
+                        }
+                        throw new Exception();
                 }
             }
 
-            throw new NotImplementedException();
+            return new Grammar<T>(prods);
         }
     }
 }

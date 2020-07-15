@@ -339,18 +339,128 @@ namespace CompilerCampExercise1
             return current;
         }
 
+
+        private List<Statement> ParseStatementsUntilCloseCurlyBrace()
+        {
+            List<Statement> statements = new List<Statement>();
+            while(true)
+            {
+                if(TryNextToken(ThingType.Identifier, out string ident))
+                {
+                    NamespacedThing namespacedIdent = ParseNamespacedThingStartingWith(ident);
+
+                    //Declaration
+                    if (TryNextToken(ThingType.Identifier, out string name))
+                    {
+                        if (CheckNextToken(ThingType.EqualsOperator))
+                        {
+                            Expression value = ParseExpr(false, false, true, out _);
+
+                            statements.Add(new DeclarationAssignment() { Name = name, Type = namespacedIdent, Value = value });
+                        }
+                        else if (CheckNextToken(ThingType.Semicolon))
+                        {
+                            statements.Add(new Declaration() { Name = name, Type = namespacedIdent });
+                        }
+                        else
+                        {
+                            throw new Exception();
+                        }
+                    }
+
+                    //Function call
+                    else if (CheckNextToken(ThingType.OpenParenthesis))
+                    {
+                        List<Expression> parameters = ParseParameterExpressionList();
+
+                        statements.Add(new FunctionCall() { FunctionName = namespacedIdent, Parameters = parameters });
+                    }
+
+                    //Assignment
+                    else if (CheckNextToken(ThingType.EqualsOperator))
+                    {
+                        Expression value = ParseExpr(false, false, true, out _);
+
+                        statements.Add(new Assignment() { LHS = namespacedIdent, RHS = value });
+                    }
+
+                    //Increment
+                    else if(CheckNextToken(ThingType.Increment))
+                    {
+                        statements.Add(new IncrementExpression() { Value = namespacedIdent });
+                    }
+
+                    //Decrement
+                }
+            }
+        }
+
+
+        private static Dictionary<ThingType, int> precedences = new Dictionary<ThingType, int> {
+            [ThingType.PlusOperator] = AdditionExpression.Precedence,
+            [ThingType.MinusOperator] = SubtractionExpression.Precedence,
+            [ThingType.MultiplyOperator] = MultiplicationExpression.Precedence,
+            [ThingType.DivideOperator] = DivisionExpression.Precedence
+        };
+
+        private static Dictionary<ThingType, Associativity> associativities = new Dictionary<ThingType, Associativity>
+        {
+            [ThingType.PlusOperator] = AdditionExpression.Associative,
+            [ThingType.MinusOperator] = SubtractionExpression.Associative,
+            [ThingType.MultiplyOperator] = MultiplicationExpression.Associative,
+            [ThingType.DivideOperator] = DivisionExpression.Associative
+        };
+
+        private static HashSet<ThingType> operators = new HashSet<ThingType> { ThingType.PlusOperator, ThingType.MinusOperator, ThingType.MultiplyOperator, ThingType.DivideOperator };
         private Expression ParseExpr(bool finishOnCloseParen, bool finishOnComma, bool finishOnSemicolon, out ThingType finishedToken)
         {
-            UnparsedExprCuzLazy unparsedExprCuzLazy = new UnparsedExprCuzLazy();
-            while (!TryNextToken(ThingType.Semicolon, out string semic))
-            {
-                unparsedExprCuzLazy.Tokens.Add(tokens[pos++]);
-            }
-            finishedToken = ThingType.Semicolon;
-            return unparsedExprCuzLazy;
+            //UnparsedExprCuzLazy unparsedExprCuzLazy = new UnparsedExprCuzLazy();
+            //while (!TryNextToken(ThingType.Semicolon, out string semic))
+            //{
+            //    unparsedExprCuzLazy.Tokens.Add(tokens[pos++]);
+            //}
+            //finishedToken = ThingType.Semicolon;
+            //return unparsedExprCuzLazy;
 
             Stack<ThingType> opStack = new Stack<ThingType>();
-            Queue<Expression> output = new Queue<Expression>();
+            LinkedList<Expression> output = new LinkedList<Expression>();
+
+            void pushOperatorFromStack()
+            {
+                ThingType stackTop = opStack.Pop();
+                switch (stackTop)
+                {
+                    case ThingType.PlusOperator:
+                        var lastNode = output.Last;
+                        output.Remove(lastNode);
+                        var last2 = output.Last;
+                        output.Remove(last2);
+                        output.AddLast(new AdditionExpression { LHS = last2.Value, RHS = lastNode.Value });
+                        break;
+                    case ThingType.MinusOperator:
+                        lastNode = output.Last;
+                        output.Remove(lastNode);
+                        last2 = output.Last;
+                        output.Remove(last2);
+                        output.AddLast(new SubtractionExpression { LHS = last2.Value, RHS = lastNode.Value });
+                        break;
+                    case ThingType.MultiplyOperator:
+                        lastNode = output.Last;
+                        output.Remove(lastNode);
+                        last2 = output.Last;
+                        output.Remove(last2);
+                        output.AddLast(new MultiplicationExpression { LHS = last2.Value, RHS = lastNode.Value });
+                        break;
+                    case ThingType.DivideOperator:
+                        lastNode = output.Last;
+                        output.Remove(lastNode);
+                        last2 = output.Last;
+                        output.Remove(last2);
+                        output.AddLast(new DivisionExpression { LHS = last2.Value, RHS = lastNode.Value });
+                        break;
+                }
+            }
+            
             while(true)
             {
                 var token = GetTokenUnconditionally();
@@ -358,41 +468,195 @@ namespace CompilerCampExercise1
                 if(token.Value == ThingType.IntLiteral)
                 {
                     int num = int.Parse(token.Key);
-                    output.Enqueue(new ConstantIntExpression { Value = num });
+                    output.AddLast(new ConstantIntExpression { Value = num });
                     continue;
                 }
 
-                if(token.Value == ThingType.Identifier)
+                if (token.Value == ThingType.StringLiteral)
+                {
+                    string val = token.Key;
+                    output.AddLast(new ConstantStringExpression { Value = FromStringToken(val) });
+                    continue;
+                }
+
+                if (token.Value == ThingType.BoolLiteral)
+                {
+                    bool val = bool.Parse(token.Key);
+                    output.AddLast(new ConstantBooleanExpression { Value = val });
+                    continue;
+                }
+
+                if (token.Value == ThingType.Identifier)
                 {
                     NamespacedThing thing = ParseNamespacedThingStartingWith(token.Key);
                     if(CheckNextToken(ThingType.OpenParenthesis))
                     {
-                        List<Expression> parameters = new List<Expression>();
+                        List<Expression> parameters = ParseParameterExpressionList();
 
-                        if(!CheckNextToken(ThingType.CloseParenthesis))
-                        {
-                            ThingType tType;
-
-                            do
-                            {
-                                Expression expr = ParseExpr(true, true, false, out tType);
-                                parameters.Add(expr);
-                            } while (tType != ThingType.CloseParenthesis);
-                        }
-
-                        output.Enqueue(new FunctionCall() { FunctionName = thing, Parameters = parameters });
+                        output.AddLast(new FunctionCall() { FunctionName = thing, Parameters = parameters });
                     }
                     else
                     {
-                        output.Enqueue(new GetVariableOrField { Value = thing });
+                        output.AddLast(new GetVariableOrField { Value = thing });
                     }
 
                     continue;
                 }
 
 
-                //if(token.Value == ThingType.PlusOperator || token.Value == ThingType.MinusOperator || token.Value == ThingType.DivideOperator || token.Value == ThingType.MultiplyOperator)
+                if(operators.Contains(token.Value))
+                {
+                    while(opStack.Count > 0 && ((operators.Contains(opStack.Peek())) && (precedences[opStack.Peek()] > precedences[token.Value]) || (precedences[opStack.Peek()] == precedences[token.Value] && associativities[token.Value] == Associativity.Left)))
+                    {
+                        pushOperatorFromStack();
+                    }
+
+                    opStack.Push(token.Value);
+                }
+
+                else if(token.Value == ThingType.OpenParenthesis)
+                {
+                    opStack.Push(ThingType.OpenParenthesis);
+                }
+
+                else if(token.Value == ThingType.CloseParenthesis)
+                {
+                    while(opStack.Count > 0 && opStack.Peek() != ThingType.OpenParenthesis)
+                    {
+                        pushOperatorFromStack();
+                    }
+
+                    if(opStack.Count == 0)
+                    {
+                        if(finishOnCloseParen && output.Count == 1)
+                        {
+                            finishedToken = ThingType.CloseParenthesis;
+                            if(output.Count != 1)
+                            {
+                                throw new Exception();
+                            }
+                            return output.First.Value;
+                        }
+                        else
+                        {
+                            throw new Exception();
+                        }
+                    }
+
+                    opStack.Pop();
+                }
+                else if(token.Value == ThingType.Semicolon)
+                {
+                    if(finishOnSemicolon)
+                    {
+                        finishedToken = ThingType.Semicolon;
+                        break;
+                    }
+
+                    throw new Exception();
+                }
+                else if(token.Value == ThingType.Comma)
+                {
+                    if(finishOnComma)
+                    {
+                        finishedToken = ThingType.Comma;
+                        break;
+                    }
+
+                    throw new Exception();
+                }
+                else
+                {
+                    throw new Exception();
+                }
             }
+
+            while(opStack.Count > 0)
+            {
+                pushOperatorFromStack();
+            }
+            if(output.Count != 1)
+            {
+                throw new Exception();
+            }
+            return output.First.Value;
+
+        }
+
+        private List<Expression> ParseParameterExpressionList()
+        {
+            List<Expression> parameters = new List<Expression>();
+
+            if (!CheckNextToken(ThingType.CloseParenthesis))
+            {
+                ThingType tType;
+
+                do
+                {
+                    Expression expr = ParseExpr(true, true, false, out tType);
+                    parameters.Add(expr);
+                } while (tType != ThingType.CloseParenthesis);
+            }
+
+            return parameters;
+        }
+
+        private string FromStringToken(string value)
+        {
+            List<char> chars = new List<char>(value.Length);
+            int state = 0;
+            value = value.Substring(1, value.Length - 2);
+            for(int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                switch(state)
+                {
+                    case 0:
+                        if(c == '\\')
+                        {
+                            state = 1;
+                            break;
+                        }
+
+                        chars.Add(c);
+                        break;
+                    case 1:
+                        switch(c)
+                        {
+                            case '"':
+                            case '\\':
+                            case '\'':
+                                chars.Add(c);
+                                break;
+                            case 'a':
+                                chars.Add('\a');
+                                break;
+                            case 'b':
+                                chars.Add('\b');
+                                break;
+                            case 'f':
+                                chars.Add('\f');
+                                break;
+                            case 'n':
+                                chars.Add('\n');
+                                break;
+                            case 'r':
+                                chars.Add('\r');
+                                break;
+                            case 't':
+                                chars.Add('\t');
+                                break;
+                            case 'v':
+                                chars.Add('\v');
+                                break;
+                            default:
+                                throw new Exception();
+                        }
+                        break;
+                }
+            }
+
+            return new string(chars.ToArray());
         }
     }
 }
