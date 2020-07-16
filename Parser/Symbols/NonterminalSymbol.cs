@@ -17,6 +17,11 @@ namespace Parser.Symbols
             Name = name;
         }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
         public NonterminalNode<T> TryMatch(List<KeyValuePair<string, T>> tokens, ref int position)
         {
             NonterminalNode<T> node = null;

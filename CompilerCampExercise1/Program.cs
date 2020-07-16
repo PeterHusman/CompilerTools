@@ -46,17 +46,19 @@ namespace CompilerCampExercise1
         MinusOperator,
         PlusOperator,
         DivideOperator,
-        MultiplyOperator
+        MultiplyOperator,
+        EndOfStream
     }
     class Program
     {
         //World's worst tokenizer, do not use
         static void Main(string[] args)
         {
+
             //C:\Users\Peter.Husman\source\repos\CompilerCampExercise1\CompilerCampExercise1\
             string input = File.ReadAllText(@"../../Test.cs");
 
-            var tokenizer = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a);
+            var tokenizer = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a, ThingType.EndOfStream);
 
             List<KeyValuePair<string, ThingType>> thingies = tokenizer.Tokenize(input);
 
@@ -67,17 +69,45 @@ namespace CompilerCampExercise1
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
 
-            //Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
+            Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
 
-            //BottomUpParser<ThingType> parser = new BottomUpParser<ThingType>(grammar);
+            LR1Parser<ThingType> parser = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar), ThingType.EndOfStream);
 
-            //NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize("1 + 2 - 3*4/5 + 6"));
+            NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize("1 + 2 - 3*4/5 + 6"));
+
+            Console.WriteLine();
+            RenderNode(node);
 
             Phase2 phase2 = new Phase2(thingies);
             CompilationUnit unit = phase2.Parse();
 
 
             Console.ReadKey(true);
+        }
+
+        static ConsoleColor[] colors = new ConsoleColor[] { ConsoleColor.Red, ConsoleColor.Green, ConsoleColor.Yellow, ConsoleColor.Blue };
+
+        static void RenderNode(Node node, int indentation = 0)
+        {
+            //Console.Write(new string('|', indentation));
+            for(int i = 0; i < indentation; i++)
+            {
+                Console.ForegroundColor = colors[i % colors.Length];
+                Console.Write("| ");
+            }
+            Console.ForegroundColor = ConsoleColor.White;
+            if (node is Terminal<ThingType> terminal)
+            {
+                Console.WriteLine($"{terminal.TokenType.ToString()}: {terminal.TokenValue}");
+            }
+            else if(node is NonterminalNode<ThingType> nonterm)
+            {
+                Console.WriteLine($"{nonterm.Name}");
+                for(int i = 0; i < nonterm.Children.Length; i++)
+                {
+                    RenderNode(nonterm.Children[i], indentation + 1);
+                }
+            }
         }
     }
 }

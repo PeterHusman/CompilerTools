@@ -55,5 +55,10 @@ namespace Parser
             position = fakePos;
             return new NonterminalNode<T>(wip.ToArray(), Left.Name, this);
         }
+
+        public override string ToString()
+        {
+            return $"{Left.ToString()} = {Symbols.Select(a => a.ToString()).Aggregate((a, b) => $"{a} {b}")}";
+        }
     }
 }

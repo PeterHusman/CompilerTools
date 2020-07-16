@@ -13,6 +13,22 @@ namespace Tokenizer
 
         public HashSet<T> Useless { get; set; }
 
+        private T EndOfStream { get; set; }
+
+        private bool useEOS { get; set; }
+
+        public Tokenizer(Dictionary<T, string> notRealRegexes, HashSet<T> useless, Func<T, int> precedence, T endOfStream)
+        {
+            foreach (T type in notRealRegexes.Keys.OrderBy(a => precedence(a)))
+            {
+                Regexes.Add(new KeyValuePair<T, Regex>(type, new Regex($"\\G({notRealRegexes[type]})", RegexOptions.Compiled)));
+            }
+
+            Useless = useless;
+            EndOfStream = endOfStream;
+            useEOS = true;
+        }
+
         public Tokenizer(Dictionary<T, string> notRealRegexes, HashSet<T> useless, Func<T, int> precedence)
         {
             foreach (T type in notRealRegexes.Keys.OrderBy(a => precedence(a)))
@@ -21,6 +37,8 @@ namespace Tokenizer
             }
 
             Useless = useless;
+            EndOfStream = default;
+            useEOS = false;
         }
 
         public List<KeyValuePair<string, T>> Tokenize(string input)
@@ -50,6 +68,11 @@ namespace Tokenizer
 
                 //remaining = remaining.Remove(0, match.Length);
                 startingPos += match.Length;
+            }
+
+            if (useEOS)
+            {
+                thingies.Add(new KeyValuePair<string, T>("", EndOfStream));
             }
 
             return thingies;

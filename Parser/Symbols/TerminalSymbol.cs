@@ -15,6 +15,11 @@ namespace Parser.Symbols
             TokenType = tokenType;
         }
 
+        public override string ToString()
+        {
+            return TokenType.ToString();
+        }
+
         public override bool Equals(object obj)
         {
             if(!(obj is TerminalSymbol<T> term))
@@ -34,6 +39,33 @@ namespace Parser.Symbols
         public override int GetHashCode()
         {
             return -1502943246 + EqualityComparer<T>.Default.GetHashCode(TokenType);
+        }
+    }
+
+    public class TerminalEpsilon<T> : TerminalSymbol<T>, IEquatable<TerminalEpsilon<T>> where T : Enum
+    {
+        public TerminalEpsilon() : base(default(T))
+        {
+        }
+
+        public override string ToString()
+        {
+            return "Epsilon";
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TerminalEpsilon<T>;
+        }
+
+        public override int GetHashCode()
+        {
+            return 100;
+        }
+
+        public bool Equals(TerminalEpsilon<T> other)
+        {
+            return true;
         }
     }
 }

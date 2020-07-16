@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AugmentedGrammar.cs" />
     <Compile Include="BottomUpParser.cs" />
     <Compile Include="Grammar.cs" />
     <Compile Include="LR1Parser.cs" />

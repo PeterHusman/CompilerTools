@@ -22,6 +22,74 @@ namespace Parser
 
     public class Grammar<T> where T : Enum
     {
+        internal Dictionary<Symbol<T>, HashSet<Symbol<T>>> firsts { get; set; }
+
+        internal void GetFirsts()
+        {
+            Queue<NonterminalSymbol<T>> nonterms = new Queue<NonterminalSymbol<T>>(Productions.Select(a => a.Left).Distinct());
+
+            foreach (NonterminalSymbol<T> nont in nonterms)
+            {
+                firsts.Add(nont, new HashSet<Symbol<T>>());
+            }
+
+            while (nonterms.Count > 0)
+            {
+                NonterminalSymbol<T> symbol = nonterms.Dequeue();
+                if (!firsts.ContainsKey(symbol))
+                {
+                    firsts.Add(symbol, new HashSet<Symbol<T>>());
+                }
+
+                int firstSize = firsts[symbol].Count;
+
+                if (symbol.Productions.Any(a => a.Symbols.Length == 0))
+                {
+                    firsts[symbol].Add(new TerminalEpsilon<T>());
+                }
+
+                foreach (Production<T> p in symbol.Productions)
+                {
+                    for (int i = 0; i < p.Symbols.Length; i++)
+                    {
+                        if (p.Symbols[i] is TerminalSymbol<T> tSym)
+                        {
+                            if (tSym is TerminalEpsilon<T>)
+                            {
+                                break;
+                            }
+                            firsts[symbol].Add(tSym);
+                        }
+                        else if (p.Symbols[i] is NonterminalSymbol<T> nontermSym)
+                        {
+                            bool hasEp = false;
+                            foreach (Symbol<T> sym in firsts[nontermSym])
+                            {
+                                if (sym is TerminalEpsilon<T>)
+                                {
+                                    hasEp = true;
+                                    continue;
+                                }
+                                firsts[symbol].Add(sym);
+                            }
+                            if (!hasEp)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                int lastSize = firsts[symbol].Count;
+                if (lastSize == 0 || lastSize != firstSize)
+                {
+                    nonterms.Enqueue(symbol);
+                }
+            }
+
+        }
+
+
         public List<Production<T>> Productions { get; }
 
         private static Tokenizer<GrammarTokenType> tokenizer = new Tokenizer<GrammarTokenType>(new Dictionary<GrammarTokenType, string>
@@ -33,7 +101,7 @@ namespace Parser
             [GrammarTokenType.Comment] = @"//[^\r\n]*\n",
             [GrammarTokenType.Newline] = @"[\r\n]+",
             //[GrammarTokenType.AnythingElse] = @"\S+"
-        }, new HashSet<GrammarTokenType> { GrammarTokenType.Whitespace, GrammarTokenType.Comment }, a => (int)a);
+        }, new HashSet<GrammarTokenType> { GrammarTokenType.Whitespace, GrammarTokenType.Comment }, a => (int)a, GrammarTokenType.Newline);
 
         public Grammar(List<Production<T>> prods)
         {
