@@ -1,0 +1,9 @@
+﻿Function = Identifier Identifier ParametersInParentheses OpenCurlyBrace CloseCurlyBrace
+
+ParametersInParentheses = OpenParenthesis ParameterList CloseParenthesis
+						| OpenParenthesis CloseParenthesis
+
+ParameterList = ParameterList Comma Parameter
+			  | Parameter
+
+Parameter = Identifier Identifier

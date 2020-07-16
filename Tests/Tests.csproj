@@ -49,6 +49,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ParserGeneratorTests.cs" />
     <Compile Include="TokenizerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -59,6 +60,10 @@
     <ProjectReference Include="..\CompilerCampExercise1\CompilerCampExercise1.csproj">
       <Project>{CF2B21F5-CF65-4594-819D-0C1E6067E452}</Project>
       <Name>CompilerCampExercise1</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Parser\Parser.csproj">
+      <Project>{2E1D09E1-2C04-4A7B-A223-189A5E07BDB4}</Project>
+      <Name>Parser</Name>
     </ProjectReference>
     <ProjectReference Include="..\Tokenizer\Tokenizer.csproj">
       <Project>{F23A5C7A-BD1E-44A9-84CD-66D09880A6B5}</Project>

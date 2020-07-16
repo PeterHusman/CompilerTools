@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="GrammarDefinition.txt" />
+    <Content Include="GrammarDefinition2.txt" />
     <Content Include="Syntax.txt" />
   </ItemGroup>
   <ItemGroup>

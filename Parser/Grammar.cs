@@ -59,6 +59,7 @@ namespace Parser
                                 break;
                             }
                             firsts[symbol].Add(tSym);
+                            break;
                         }
                         else if (p.Symbols[i] is NonterminalSymbol<T> nontermSym)
                         {
@@ -97,8 +98,8 @@ namespace Parser
             [GrammarTokenType.Equals] = "=",
             [GrammarTokenType.Pipe] = @"\|",
             [GrammarTokenType.Identifier] = "([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])*",
-            [GrammarTokenType.Whitespace] = @"( |\t|\n|\r|\r\n)+",
-            [GrammarTokenType.Comment] = @"//[^\r\n]*\n",
+            [GrammarTokenType.Whitespace] = @"( |\t)+",
+            [GrammarTokenType.Comment] = @"//[^\r\n]*",
             [GrammarTokenType.Newline] = @"[\r\n]+",
             //[GrammarTokenType.AnythingElse] = @"\S+"
         }, new HashSet<GrammarTokenType> { GrammarTokenType.Whitespace, GrammarTokenType.Comment }, a => (int)a, GrammarTokenType.Newline);

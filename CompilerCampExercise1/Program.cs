@@ -78,6 +78,15 @@ namespace CompilerCampExercise1
             Console.WriteLine();
             RenderNode(node);
 
+            Grammar<ThingType> grammar2 = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition2.txt"));
+
+            LR1Parser<ThingType> parser2 = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar2), ThingType.EndOfStream);
+
+            NonterminalNode<ThingType> node2 = parser2.Parse(tokenizer.Tokenize("int Function() {}"));
+
+            Console.WriteLine();
+            RenderNode(node);
+
             Phase2 phase2 = new Phase2(thingies);
             CompilationUnit unit = phase2.Parse();
 
