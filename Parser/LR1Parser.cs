@@ -120,7 +120,9 @@ namespace Parser
                         continue;
                     }
                     terms.Add(term);
-                    //return terms;
+
+                    //Comment this out for magic
+                    return terms;
                 }
                 else if (symbols[i] is NonterminalSymbol<T> nonterm)
                 {
@@ -140,7 +142,8 @@ namespace Parser
                         continue;
                     }
 
-                    //return terms;
+                    //Comment this out for magic
+                    return terms;
                 }
                 else
                 {
@@ -166,11 +169,16 @@ namespace Parser
                         continue;
                     }
 
-                    Symbol<T>[] symbs = new Symbol<T>[item.Production.Symbols.Length - item.DotPosition + 1];
+                    if(nextSym is TerminalSymbol<T>)
+                    {
+                        continue;
+                    }
+
+                    Symbol<T>[] symbs = new Symbol<T>[item.Production.Symbols.Length - item.DotPosition/* + 1*/];
 
                     for (int i = 0; i < symbs.Length - 1; i++)
                     {
-                        symbs[i] = item.Production.Symbols[i + item.DotPosition];
+                        symbs[i] = item.Production.Symbols[i + item.DotPosition + 1];
                     }
 
                     symbs[symbs.Length - 1] = item.LookAhead;
@@ -263,7 +271,7 @@ namespace Parser
                     return false;
                 }
 
-                //throw new Exception();
+                throw new Exception("there is conflict in ur grammar");
                 return false;
             }
 
@@ -304,7 +312,10 @@ namespace Parser
                     case ParserActionOption.Accept:
                         break;
                 }
-
+                if(!parseTable.ContainsKey((states.Peek(), token.Value)))
+                {
+                    throw new Exception($"Unexpected {token.Value} token");
+                }
                 action = parseTable[(states.Peek(), token.Value)];
             }
 
@@ -340,9 +351,13 @@ namespace Parser
                     }
                     foreach (LR1Item<T> item in set.Items.Where(a => a.DotPosition == a.Production.Symbols.Length))
                     {
+                        if(item.Production.Left.Equals(Grammar.StartingSymbol))
+                        {
+                            continue;
+                        }
                         actionDone = TryAdd(parseTable, (i, item.LookAhead.TokenType), new ParserAction() { Type = ParserActionOption.Reduce, Parameter = Grammar.Productions.IndexOf(item.Production) }) || actionDone;
                     }
-                    foreach (Symbol<T> symbol in set.Items.Select(a => a.NextSymbol).Where(a => a != null))
+                    foreach (Symbol<T> symbol in set.Items.Select(a => a.NextSymbol).Where(a => a != null).Distinct())
                     {
                         LR1ItemSet<T> setToMaybeAdd = set.PassSymbol(symbol);
                         setToMaybeAdd.Closure();

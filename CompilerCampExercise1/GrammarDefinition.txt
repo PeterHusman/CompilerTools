@@ -4,7 +4,13 @@
 
 Factor = OpenParenthesis Expression CloseParenthesis
        | IntLiteral
+	   | VarLocator
 
 Term = Term MultiplyOperator Factor
 	 | Term DivideOperator Factor
 	 | Factor
+
+VarLocator = VarLocator DotOperator Identifier
+		   | VarLocator OpenParenthesis CloseParenthesis
+		   | Identifier
+		   

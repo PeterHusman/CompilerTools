@@ -1,4 +1,5 @@
-﻿using Parser;
+﻿#define LR1Generator
+using Parser;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,6 +61,7 @@ namespace CompilerCampExercise1
 
             var tokenizer = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a, ThingType.EndOfStream);
 
+#if Specific
             List<KeyValuePair<string, ThingType>> thingies = tokenizer.Tokenize(input);
 
             Span<KeyValuePair<string, ThingType>> tokens = new Span<KeyValuePair<string, ThingType>>(thingies.ToArray());
@@ -68,29 +70,36 @@ namespace CompilerCampExercise1
             {
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
+#endif
 
+#if LR1Generator
             Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar), ThingType.EndOfStream);
 
-            NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize("1 + 2 - 3*4/5 + 6"));
+            string inputParserTest = "1 + a.b.c().d - 3 * 4 / 5 + 6";
+
+            NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize(inputParserTest));
 
             Console.WriteLine();
             RenderNode(node);
+
+            Console.ReadKey(true);
 
             Grammar<ThingType> grammar2 = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition2.txt"));
-
             LR1Parser<ThingType> parser2 = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar2), ThingType.EndOfStream);
-
             NonterminalNode<ThingType> node2 = parser2.Parse(tokenizer.Tokenize("int Function() {}"));
-
             Console.WriteLine();
             RenderNode(node);
+#endif
+
+#if Specific
+
 
             Phase2 phase2 = new Phase2(thingies);
             CompilationUnit unit = phase2.Parse();
 
-
+#endif
             Console.ReadKey(true);
         }
 
