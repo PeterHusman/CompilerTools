@@ -75,14 +75,17 @@ namespace CompilerCampExercise1
 #if LR1Generator
             Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
 
-            LR1Parser<ThingType> parser = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar), ThingType.EndOfStream);
+            AugmentedGrammar<ThingType> augGrammar = new AugmentedGrammar<ThingType>(grammar);
 
-            //Without the efg it works
+            LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augGrammar, ThingType.EndOfStream);
+
+            //Depends on rule order. The first one is the one that works for some reason.
+            //Pls figure it out when you're less tired.
             string inputParserTest = "1 + a.b.c(efg).d - 3 * 4 / 5 + 6";
 
             NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize(inputParserTest));
 
-            Console.WriteLine();
+            //Console.WriteLine();
             RenderNode(node);
 
             Console.ReadKey(true);
@@ -91,7 +94,7 @@ namespace CompilerCampExercise1
             LR1Parser<ThingType> parser2 = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar2), ThingType.EndOfStream);
             NonterminalNode<ThingType> node2 = parser2.Parse(tokenizer.Tokenize("int Function() {}"));
             Console.WriteLine();
-            RenderNode(node);
+            RenderNode(node2);
 #endif
 
 #if Specific

@@ -53,7 +53,7 @@ namespace Parser
             {
                 return null;
             }
-            if (symbol != NextSymbol)
+            if (!symbol.Equals(NextSymbol))
             {
                 return null;
             }
@@ -151,7 +151,7 @@ namespace Parser
                 }
             }
 
-            return terms;
+            //return terms;
 
             throw new Exception();
         }
@@ -319,7 +319,8 @@ namespace Parser
                 }
                 if(!parseTable.ContainsKey((states.Peek(), token.Value)))
                 {
-                    throw new Exception($"Unexpected {token.Value} token");
+                    T[] acceptableTokens = parseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                    throw new Exception($"Unexpected {token.Value} token. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
                 }
                 action = parseTable[(states.Peek(), token.Value)];
             }
@@ -375,6 +376,8 @@ namespace Parser
                         for (int j = 0; j < sets.Count; j++)
                         {
                             LR1ItemSet<T> setCheck = sets[j];
+
+                            //Does this work?
                             if (setToMaybeAdd.EqualsOtherItemSet(setCheck))
                             {
                                 foundOne = true;
