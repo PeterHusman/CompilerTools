@@ -12,5 +12,6 @@ Term = Term MultiplyOperator Factor
 
 VarLocator = VarLocator DotOperator Identifier
 		   | VarLocator OpenParenthesis CloseParenthesis
+		   | VarLocator OpenParenthesis Identifier CloseParenthesis
 		   | Identifier
 		   
