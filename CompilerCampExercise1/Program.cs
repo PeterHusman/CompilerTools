@@ -92,9 +92,17 @@ namespace CompilerCampExercise1
 
             Grammar<ThingType> grammar2 = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition2.txt"));
             LR1Parser<ThingType> parser2 = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar2), ThingType.EndOfStream);
-            NonterminalNode<ThingType> node2 = parser2.Parse(tokenizer.Tokenize("int Function() {}"));
+            NonterminalNode<ThingType> node2 = parser2.Parse(tokenizer.Tokenize("int Function(a b) {}"));
             Console.WriteLine();
             RenderNode(node2);
+            Console.ReadKey(true);
+
+            Grammar<ThingType> grammar3 = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../ClassGrammarDefinition.txt"));
+            LR1Parser<ThingType> parser3 = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar3), ThingType.EndOfStream);
+            NonterminalNode<ThingType> node3 = parser3.Parse(tokenizer.Tokenize("public class Name {}"));
+            Console.WriteLine();
+            RenderNode(node3);
+            Console.ReadKey(true);
 #endif
 
 #if Specific

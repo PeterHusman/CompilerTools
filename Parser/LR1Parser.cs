@@ -291,6 +291,11 @@ namespace Parser
             states.Push(0);
             int position = 0;
             KeyValuePair<string, T> token = tokens[position];
+            if (!parseTable.ContainsKey((states.Peek(), token.Value)))
+            {
+                T[] acceptableTokens = parseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                throw new Exception($"Unexpected {token.Value} token. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
+            }
             ParserAction action = parseTable[(states.Peek(), token.Value)];
             while(action.Type != ParserActionOption.Accept)
             {

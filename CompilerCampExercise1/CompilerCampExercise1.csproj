@@ -68,6 +68,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="ClassGrammarDefinition.txt" />
     <Content Include="GrammarDefinition.txt" />
     <Content Include="GrammarDefinition2.txt" />
     <Content Include="Syntax.txt" />

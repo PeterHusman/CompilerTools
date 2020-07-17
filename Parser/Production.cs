@@ -58,7 +58,7 @@ namespace Parser
 
         public override string ToString()
         {
-            return $"{Left.ToString()} = {Symbols.Select(a => a.ToString()).Aggregate((a, b) => $"{a} {b}")}";
+            return $"{Left.ToString()} = {(Symbols.Length == 0 ? string.Empty : Symbols.Select(a => a.ToString()).Aggregate((a, b) => $"{a} {b}"))}";
         }
     }
 }

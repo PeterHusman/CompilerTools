@@ -1,0 +1,7 @@
+﻿Class = OptAccessModifier OptStatic ClassKeyword Identifier OpenCurlyBrace CloseCurlyBrace
+
+OptAccessModifier = AccessModifier
+				  |
+
+OptStatic = StaticKeyword
+		  |
