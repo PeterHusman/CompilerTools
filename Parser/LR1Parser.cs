@@ -241,6 +241,11 @@ namespace Parser
     {
         public ParserActionOption Type;
         public int Parameter;
+
+        public override string ToString()
+        {
+            return Type == ParserActionOption.Accept ? "Acc" : (Type == ParserActionOption.Reduce ? $"r{Parameter}" : $"s{Parameter}");
+        }
     }
 
 
@@ -272,7 +277,7 @@ namespace Parser
                 }
 
                 throw new Exception("there is conflict in ur grammar");
-                return false;
+                //return false;
             }
 
             dict.Add(key, value);
@@ -364,6 +369,7 @@ namespace Parser
 
                         TerminalSymbol<T> term = symbol as TerminalSymbol<T>;
                         bool isTerm = term != null;
+
 
                         bool foundOne = false;
                         for (int j = 0; j < sets.Count; j++)

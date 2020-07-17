@@ -77,7 +77,8 @@ namespace CompilerCampExercise1
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(new AugmentedGrammar<ThingType>(grammar), ThingType.EndOfStream);
 
-            string inputParserTest = "1 + a.b.c(abc).d - 3 * 4 / 5 + 6";
+            //Without the efg it works
+            string inputParserTest = "1 + a.b.c(efg).d - 3 * 4 / 5 + 6";
 
             NonterminalNode<ThingType> node = parser.Parse(tokenizer.Tokenize(inputParserTest));
 
