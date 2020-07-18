@@ -1,0 +1,120 @@
+﻿NamespacedCompilationUnit = NamespaceKeyword Identifier OpenCurlyBrace CompilationUnit CloseCurlyBrace
+						  | CompilationUnit
+
+CompilationUnit = CompilationUnit Class
+				| Class
+
+
+OptionalAccessModifier = AccessModifier
+					   | 
+
+OptionalStatic = StaticKeyword
+			   | 
+
+
+
+Class = OptionalAccessModifier OptionalStatic ClassKeyword Identifier OpenCurlyBrace ClassMembers CloseCurlyBrace
+	  | OptionalAccessModifier OptionalStatic ClassKeyword Identifier OpenCurlyBrace CloseCurlyBrace
+	  | OptionalAccessModifier OptionalStatic ClassKeyword Identifier ParamsInParens Semicolon
+
+TypeName = TypeName OpenSquareBracket CloseSquareBracket
+		 | Namespaced
+
+VarOrFieldReference = Namespaced
+
+Namespaced = Namespaced DotOperator Identifier
+		   | Identifier
+
+ClassMembers = ClassMembers FieldDecl
+			 | ClassMembers MethodDecl
+			 | ClassMembers CtorDecl
+			 | FieldDecl
+			 | MethodDecl
+			 | CtorDecl
+		//	 |
+
+FieldDecl = OptionalAccessModifier OptionalStatic TypeName Identifier Semicolon
+		  | OptionalAccessModifier OptionalStatic TypeName Identifier EqualsOperator Expression Semicolon
+			
+MethodDecl = OptionalAccessModifier OptionalStatic TypeName Identifier ParamsInParens OpenCurlyBrace Statements CloseCurlyBrace
+		   | OptionalAccessModifier OptionalStatic TypeName Identifier ParamsInParens OpenCurlyBrace CloseCurlyBrace
+		   | OptionalAccessModifier OptionalStatic EntrypointKeyword TypeName Identifier ParamsInParens OpenCurlyBrace Statements CloseCurlyBrace
+		   | OptionalAccessModifier OptionalStatic EntrypointKeyword TypeName Identifier ParamsInParens OpenCurlyBrace CloseCurlyBrace
+
+CtorDecl = OptionalAccessModifier OptionalStatic Identifier ParamsInParens OpenCurlyBrace Statements CloseCurlyBrace
+		 | OptionalAccessModifier OptionalStatic Identifier ParamsInParens OpenCurlyBrace CloseCurlyBrace
+
+ParamsInParens = OpenParenthesis ParameterList CloseParenthesis
+			   | OpenParenthesis CloseParenthesis
+
+ParameterList = ParameterList Comma Parameter
+			  | Parameter
+
+Parameter = TypeName Identifier
+
+Statements = Statements Statement
+		   | Statement
+
+Statement = Semicolon
+	      | FunctionCall Semicolon
+		  | VarDecl
+		  | IfStatement
+		  | WhileLoop
+		  | IncrementExpr Semicolon
+		  | DecrementExpr Semicolon
+		  | AssignmentExpr Semicolon
+		  | ReturnStatement
+
+
+VarDecl = TypeName Identifier Semicolon
+		| TypeName Identifier EqualsOperator Expression Semicolon	
+
+IfStatement = IfKeyword OpenParenthesis Expression CloseParenthesis OpenCurlyBrace OptStatements CloseCurlyBrace
+			| IfKeyword OpenParenthesis Expression CloseParenthesis OpenCurlyBrace OptStatements CloseCurlyBrace ElseStatement
+
+ElseStatement = ElseKeyword OpenCurlyBrace OptStatements CloseCurlyBrace
+			  | ElseKeyword IfStatement
+
+OptStatements = Statements
+			  | 
+
+WhileLoop = WhileKeyword OpenParenthesis Expression CloseParenthesis OpenCurlyBrace Statements CloseCurlyBrace
+
+FunctionCall = Factor PassedParamsInParens
+
+PassedParamsInParens = OpenParenthesis CloseParenthesis
+					 | OpenParenthesis PassedParamsList CloseParenthesis
+
+PassedParamsList = PassedParamsList Comma Expression
+				 | Expression
+
+IncrementExpr = VarOrFieldReference Increment
+DecrementExpr = VarOrFieldReference Decrement
+
+AssignmentExpr = VarOrFieldReference EqualsOperator Expression
+
+
+Expression = AddSubExpression Equality AddSubExpression
+		   | AddSubExpression LessThan AddSubExpression
+		   | AddSubExpression GreaterThan AddSubExpression
+		   | AddSubExpression NotEquals AddSubExpression
+		   | AddSubExpression
+
+AddSubExpression = AddSubExpression PlusOperator Term
+		   | AddSubExpression MinusOperator Term
+		   | Term
+
+Factor = OpenParenthesis Expression CloseParenthesis
+       | IntLiteral
+	   | StringLiteral
+	   | BoolLiteral
+	   | VarOrFieldReference
+	   | FunctionCall
+
+Term = Term MultiplyOperator Factor
+	 | Term DivideOperator Factor
+	 | Factor
+
+
+ReturnStatement = ReturnKeyword Expression Semicolon
+				| ReturnKeyword Semicolon

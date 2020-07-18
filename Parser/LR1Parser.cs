@@ -230,14 +230,14 @@ namespace Parser
         }
     }
 
-    enum ParserActionOption
+    public enum ParserActionOption
     {
         Shift,
         Reduce,
         Accept
     }
 
-    struct ParserAction
+    public struct ParserAction
     {
         public ParserActionOption Type;
         public int Parameter;
@@ -267,7 +267,13 @@ namespace Parser
             SetupParseTable();
         }
 
-        static bool TryAdd<T1,T2>(Dictionary<T1,T2> dict, T1 key, T2 value)
+        public LR1Parser(Dictionary<(int, T), ParserAction> parseTable, Dictionary<(int, string), int> gotoTable)
+        {
+            this.parseTable = parseTable;
+            this.gotoTable = gotoTable;
+        }
+
+        /*static*/ bool TryAdd<T1,T2>(Dictionary<T1,T2> dict, T1 key, T2 value)
         {
             if(dict.ContainsKey(key))
             {
@@ -294,7 +300,7 @@ namespace Parser
             if (!parseTable.ContainsKey((states.Peek(), token.Value)))
             {
                 T[] acceptableTokens = parseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
-                throw new Exception($"Unexpected {token.Value} token. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
+                throw new Exception($"Unexpected {token.Value} token at start of file. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
             }
             ParserAction action = parseTable[(states.Peek(), token.Value)];
             while(action.Type != ParserActionOption.Accept)
@@ -325,7 +331,7 @@ namespace Parser
                 if(!parseTable.ContainsKey((states.Peek(), token.Value)))
                 {
                     T[] acceptableTokens = parseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
-                    throw new Exception($"Unexpected {token.Value} token. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
+                    throw new Exception($"Unexpected {token.Value} token at token stream index {position}. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
                 }
                 action = parseTable[(states.Peek(), token.Value)];
             }

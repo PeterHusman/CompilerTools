@@ -21,7 +21,7 @@ namespace CompilerCampExercise1
             [ThingType.OpenCurlyBrace] = @"\{",
             [ThingType.CloseCurlyBrace] = @"\}",
             [ThingType.Identifier] = "([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])*",
-            [ThingType.IntLiteral] = @"[0-9]+",
+            [ThingType.IntLiteral] = @"-?[0-9]+",
             [ThingType.OpenParenthesis] = @"\(",
             [ThingType.LessThan] = "<",
             [ThingType.CloseParenthesis] = @"\)",
@@ -41,7 +41,12 @@ namespace CompilerCampExercise1
             [ThingType.NotEquals] = "!=",
             [ThingType.Not] = "!",
             [ThingType.Increment] = "\\+\\+",
-            [ThingType.Decrement] = "--"
+            [ThingType.Decrement] = "--",
+            [ThingType.OpenSquareBracket] = "\\[",
+            [ThingType.CloseSquareBracket] = "\\]",
+            [ThingType.IfKeyword] = "if\\b",
+            [ThingType.WhileKeyword] = "while\\b",
+            [ThingType.ElseKeyword] = "else\\b"
         };
 
         public static HashSet<ThingType> IgnoredTokens = new HashSet<ThingType> { ThingType.Whitespace, ThingType.Comment };

@@ -14,6 +14,8 @@ namespace CompilerCampExercise1
 
     public enum ThingType
     {
+        IntLiteral,
+        ElseKeyword,
         Equality,
         Increment,
         Decrement,
@@ -23,6 +25,8 @@ namespace CompilerCampExercise1
         OpenCurlyBrace,
         BoolLiteral,
         CloseCurlyBrace,
+        OpenSquareBracket,
+        CloseSquareBracket,
         LessThan,
         GreaterThan,
         AccessModifier,
@@ -37,7 +41,6 @@ namespace CompilerCampExercise1
         StringLiteral,
         Identifier,
         Semicolon,
-        IntLiteral,
         Whitespace,
         Comment,
         OpenParenthesis,
@@ -61,7 +64,6 @@ namespace CompilerCampExercise1
 
             var tokenizer = new Tokenizer<ThingType>(CauliflowerThings.TokenDefinitions, CauliflowerThings.IgnoredTokens, a => (int)a, ThingType.EndOfStream);
 
-#if Specific
             List<KeyValuePair<string, ThingType>> thingies = tokenizer.Tokenize(input);
 
             Span<KeyValuePair<string, ThingType>> tokens = new Span<KeyValuePair<string, ThingType>>(thingies.ToArray());
@@ -70,16 +72,24 @@ namespace CompilerCampExercise1
             {
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
-#endif
 
-#if LR1Generator
+            Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../CauliflowerGrammarDefinition.txt"));
+            AugmentedGrammar<ThingType> augmentedGrammar = new AugmentedGrammar<ThingType>(grammar);
+
+            LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augmentedGrammar, ThingType.EndOfStream);
+
+            NonterminalNode<ThingType> root = parser.Parse(thingies);
+
+            RenderNode(root);
+            Console.ReadKey(true);
+
+#if false
             Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
 
             AugmentedGrammar<ThingType> augGrammar = new AugmentedGrammar<ThingType>(grammar);
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augGrammar, ThingType.EndOfStream);
 
-            //Depends on rule order. The first one is the one that works for some reason.
             //Pls figure it out when you're less tired.
             string inputParserTest = "1 + a.b.c(efg).d - 3 * 4 / 5 + 6";
 

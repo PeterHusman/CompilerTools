@@ -1,4 +1,8 @@
-﻿Class = OptAccessModifier OptStatic ClassKeyword Identifier OpenCurlyBrace CloseCurlyBrace
+﻿CompilationUnit = CompilationUnit Class
+				| Class
+
+Class = OptAccessModifier OptStatic ClassKeyword Identifier OpenCurlyBrace CloseCurlyBrace
+	  | OptAccessModifier OptStatic ClassKeyword Identifier OpenParenthesis CloseParenthesis Semicolon
 
 OptAccessModifier = AccessModifier
 				  |
