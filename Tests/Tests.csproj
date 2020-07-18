@@ -57,6 +57,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CauliflowerSpecifics\CauliflowerSpecifics.csproj">
+      <Project>{5B68F7F2-9275-49CE-9308-A4E230520F9D}</Project>
+      <Name>CauliflowerSpecifics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CompilerCampExercise1\CompilerCampExercise1.csproj">
       <Project>{CF2B21F5-CF65-4594-819D-0C1E6067E452}</Project>
       <Name>CompilerCampExercise1</Name>

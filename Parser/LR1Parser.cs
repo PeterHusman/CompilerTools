@@ -255,9 +255,9 @@ namespace Parser
 
         private T EndOfStream;
 
-        private Dictionary<(int, T), ParserAction> parseTable;
+        public Dictionary<(int, T), ParserAction> ParseTable;
 
-        private Dictionary<(int, string), int> gotoTable;
+        public Dictionary<(int, string), int> GotoTable;
 
         public LR1Parser(AugmentedGrammar<T> grammar, T endOfStream)
         {
@@ -269,8 +269,8 @@ namespace Parser
 
         public LR1Parser(Dictionary<(int, T), ParserAction> parseTable, Dictionary<(int, string), int> gotoTable)
         {
-            this.parseTable = parseTable;
-            this.gotoTable = gotoTable;
+            this.ParseTable = parseTable;
+            this.GotoTable = gotoTable;
         }
 
         /*static*/ bool TryAdd<T1,T2>(Dictionary<T1,T2> dict, T1 key, T2 value)
@@ -297,12 +297,12 @@ namespace Parser
             states.Push(0);
             int position = 0;
             KeyValuePair<string, T> token = tokens[position];
-            if (!parseTable.ContainsKey((states.Peek(), token.Value)))
+            if (!ParseTable.ContainsKey((states.Peek(), token.Value)))
             {
-                T[] acceptableTokens = parseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                T[] acceptableTokens = ParseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
                 throw new Exception($"Unexpected {token.Value} token at start of file. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
             }
-            ParserAction action = parseTable[(states.Peek(), token.Value)];
+            ParserAction action = ParseTable[(states.Peek(), token.Value)];
             while(action.Type != ParserActionOption.Accept)
             {
                 switch (action.Type)
@@ -323,17 +323,17 @@ namespace Parser
                         }
 
                         nodes.Push(new NonterminalNode<T>(popped, prod.Left.Name, prod));
-                        states.Push(gotoTable[(states.Peek(), prod.Left.Name)]);
+                        states.Push(GotoTable[(states.Peek(), prod.Left.Name)]);
                         break;
                     case ParserActionOption.Accept:
                         break;
                 }
-                if(!parseTable.ContainsKey((states.Peek(), token.Value)))
+                if(!ParseTable.ContainsKey((states.Peek(), token.Value)))
                 {
-                    T[] acceptableTokens = parseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                    T[] acceptableTokens = ParseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
                     throw new Exception($"Unexpected {token.Value} token at token stream index {position}. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
                 }
-                action = parseTable[(states.Peek(), token.Value)];
+                action = ParseTable[(states.Peek(), token.Value)];
             }
 
             return (NonterminalNode<T>)nodes.Pop();
@@ -347,8 +347,8 @@ namespace Parser
 
             sets.Add(new LR1ItemSet<T>(Grammar) { Items = new HashSet<LR1Item<T>>() { new LR1Item<T>() { DotPosition = 0, LookAhead = new TerminalSymbol<T>(EndOfStream), Production = Grammar.Productions.Last() } } });
 
-            parseTable = new Dictionary<(int, T), ParserAction>();
-            gotoTable = new Dictionary<(int, string), int>();
+            ParseTable = new Dictionary<(int, T), ParserAction>();
+            GotoTable = new Dictionary<(int, string), int>();
 
             sets[0].Closure();
             //sets.Add(sets[0].PassSymbol(Grammar.Productions.Last().Symbols[0]));
@@ -364,7 +364,7 @@ namespace Parser
                     LR1ItemSet<T> set = sets[i];
                     if (set.Items.Any(a => a.DotPosition == 1 && a.Production == Grammar.Productions.Last()))
                     {
-                        actionDone = TryAdd(parseTable, (i, EndOfStream), new ParserAction() { Type = ParserActionOption.Accept }) || actionDone;
+                        actionDone = TryAdd(ParseTable, (i, EndOfStream), new ParserAction() { Type = ParserActionOption.Accept }) || actionDone;
                     }
                     foreach (LR1Item<T> item in set.Items.Where(a => a.DotPosition == a.Production.Symbols.Length))
                     {
@@ -372,7 +372,7 @@ namespace Parser
                         {
                             continue;
                         }
-                        actionDone = TryAdd(parseTable, (i, item.LookAhead.TokenType), new ParserAction() { Type = ParserActionOption.Reduce, Parameter = Grammar.Productions.IndexOf(item.Production) }) || actionDone;
+                        actionDone = TryAdd(ParseTable, (i, item.LookAhead.TokenType), new ParserAction() { Type = ParserActionOption.Reduce, Parameter = Grammar.Productions.IndexOf(item.Production) }) || actionDone;
                     }
                     foreach (Symbol<T> symbol in set.Items.Select(a => a.NextSymbol).Where(a => a != null).Distinct())
                     {
@@ -394,7 +394,7 @@ namespace Parser
                                 foundOne = true;
                                 if (!isTerm)
                                 {
-                                    actionDone = TryAdd(gotoTable, (i, ((NonterminalSymbol<T>)symbol).Name), j) || actionDone;
+                                    actionDone = TryAdd(GotoTable, (i, ((NonterminalSymbol<T>)symbol).Name), j) || actionDone;
                                     continue;
                                 }
 
@@ -404,7 +404,7 @@ namespace Parser
                                 }
 
                                 //Delibrately NOT breaking after this because I want it to throw in case of shift-shift conflict
-                                actionDone = TryAdd(parseTable, (i, term.TokenType), new ParserAction() { Type = ParserActionOption.Shift, Parameter = j }) || actionDone;
+                                actionDone = TryAdd(ParseTable, (i, term.TokenType), new ParserAction() { Type = ParserActionOption.Shift, Parameter = j }) || actionDone;
                             }
                         }
 
@@ -412,11 +412,11 @@ namespace Parser
                         {
                             if (isTerm)
                             {
-                                TryAdd(parseTable, (i, term.TokenType), new ParserAction() { Type = ParserActionOption.Shift, Parameter = sets.Count });
+                                TryAdd(ParseTable, (i, term.TokenType), new ParserAction() { Type = ParserActionOption.Shift, Parameter = sets.Count });
                             }
                             else
                             {
-                                TryAdd(gotoTable, (i, ((NonterminalSymbol<T>)symbol).Name), sets.Count);
+                                TryAdd(GotoTable, (i, ((NonterminalSymbol<T>)symbol).Name), sets.Count);
                             }
                             sets.Add(setToMaybeAdd);
                             actionDone = true;

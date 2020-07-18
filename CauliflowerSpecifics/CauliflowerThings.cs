@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CompilerCampExercise1
+namespace CauliflowerSpecifics
 {
     public static class CauliflowerThings
     {

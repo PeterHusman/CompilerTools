@@ -1,5 +1,7 @@
 ﻿#define LR1Generator
+using CauliflowerSpecifics;
 using Parser;
+using ParseTreeExplorer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,52 +9,14 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ParseTreeExplorer;
 using Tokenizer;
+using Newtonsoft.Json;
 
 namespace CompilerCampExercise1
 {
 
-    public enum ThingType
-    {
-        IntLiteral,
-        ElseKeyword,
-        Equality,
-        Increment,
-        Decrement,
-        NotEquals,
-        Not,
-        DotOperator,
-        OpenCurlyBrace,
-        BoolLiteral,
-        CloseCurlyBrace,
-        OpenSquareBracket,
-        CloseSquareBracket,
-        LessThan,
-        GreaterThan,
-        AccessModifier,
-        EntrypointKeyword,
-        ReturnKeyword,
-        StaticKeyword,
-        ClassKeyword,
-        IfKeyword,
-        WhileKeyword,
-        ClassNameIdentifier,
-        NamespaceKeyword,
-        StringLiteral,
-        Identifier,
-        Semicolon,
-        Whitespace,
-        Comment,
-        OpenParenthesis,
-        CloseParenthesis,
-        Comma,
-        EqualsOperator,
-        MinusOperator,
-        PlusOperator,
-        DivideOperator,
-        MultiplyOperator,
-        EndOfStream
-    }
+    
     class Program
     {
         //World's worst tokenizer, do not use
@@ -77,10 +41,14 @@ namespace CompilerCampExercise1
             AugmentedGrammar<ThingType> augmentedGrammar = new AugmentedGrammar<ThingType>(grammar);
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augmentedGrammar, ThingType.EndOfStream);
-
             NonterminalNode<ThingType> root = parser.Parse(thingies);
 
             RenderNode(root);
+
+            var parseTreeExplorer = new ParseTreeExplorer.ParseTreeExplorer();
+            parseTreeExplorer.LoadParseTree(root);
+            parseTreeExplorer.ShowDialog();
+
             Console.ReadKey(true);
 
 #if false

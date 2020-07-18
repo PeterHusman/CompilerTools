@@ -33,6 +33,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json.Bson, Version=1.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.Bson.1.0.2\lib\net45\Newtonsoft.Json.Bson.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -48,6 +54,7 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.3\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -56,7 +63,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CauliflowerThings.cs" />
     <Compile Include="Phase2.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -75,9 +81,17 @@
     <Content Include="Syntax.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CauliflowerSpecifics\CauliflowerSpecifics.csproj">
+      <Project>{5B68F7F2-9275-49CE-9308-A4E230520F9D}</Project>
+      <Name>CauliflowerSpecifics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Parser\Parser.csproj">
       <Project>{2E1D09E1-2C04-4A7B-A223-189A5E07BDB4}</Project>
       <Name>Parser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ParseTreeExplorer\ParseTreeExplorer.csproj">
+      <Project>{D8AF6465-57CE-45A1-B7E9-04173D8ADFDC}</Project>
+      <Name>ParseTreeExplorer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Tokenizer\Tokenizer.csproj">
       <Project>{F23A5C7A-BD1E-44A9-84CD-66D09880A6B5}</Project>
