@@ -9,16 +9,35 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using ParseTreeExplorer;
 using Tokenizer;
 using Newtonsoft.Json;
+using System.Reflection;
 
 namespace CompilerCampExercise1
-{
-
-    
+{   
     class Program
     {
+        static Node MakeFlatList(Node[] nodes)
+        {
+            var root = nodes[0] as NonterminalNode<ThingType>;
+
+            Node[] newChildren = new Node[root.Children.Length + nodes.Length - 1];
+            root.Children.CopyTo(newChildren, 0);
+            for(int i = root.Children.Length; i < newChildren.Length; i++)
+            {
+                newChildren[i] = nodes[i - root.Children.Length + 1];
+            }
+
+            root.Children = newChildren;
+            return root;
+        }
+
+        static Node Identity(Node[] nodes)
+        {
+            return nodes[0];
+        }
+
+
         //World's worst tokenizer, do not use
         static void Main(string[] args)
         {
@@ -37,11 +56,13 @@ namespace CompilerCampExercise1
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
 
-            Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../CauliflowerGrammarDefinition.txt"));
+            IEnumerable<MethodInfo> methods = typeof(Program).GetMethods(System.Reflection.BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+            (Grammar<ThingType> grammar, Dictionary<Production<ThingType>, Func<Node[], Node>> funcs) = Grammar<ThingType>.FromTextDefinitionWithProductionNodeFunctions(File.ReadAllText(@"../../CauliflowerGrammarDefinition.txt"), methods.Where(a => a.GetParameters().Length == 1 && a.GetParameters()[0].ParameterType == typeof(Node[]) && a.ReturnType == typeof(Node)).Select(a => (Func<Node[], Node>)a.CreateDelegate(typeof(Func<Node[], Node>))).ToDictionary(a => a.Method.Name));
             AugmentedGrammar<ThingType> augmentedGrammar = new AugmentedGrammar<ThingType>(grammar);
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augmentedGrammar, ThingType.EndOfStream);
-            NonterminalNode<ThingType> root = parser.Parse(thingies);
+            NonterminalNode<ThingType> root = parser.Parse(thingies, funcs);
 
             RenderNode(root);
 

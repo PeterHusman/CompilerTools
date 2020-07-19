@@ -264,30 +264,13 @@ namespace Parser
             Grammar = grammar;
             EndOfStream = endOfStream;
 
-            SetupParseTable();
+            (ParseTable, GotoTable) = InternalParserStuff.MakeParseTable(grammar, endOfStream, false);
         }
 
         public LR1Parser(Dictionary<(int, T), ParserAction> parseTable, Dictionary<(int, string), int> gotoTable)
         {
             this.ParseTable = parseTable;
             this.GotoTable = gotoTable;
-        }
-
-        /*static*/ bool TryAdd<T1,T2>(Dictionary<T1,T2> dict, T1 key, T2 value)
-        {
-            if(dict.ContainsKey(key))
-            {
-                if(dict[key].Equals(value))
-                {
-                    return false;
-                }
-
-                throw new Exception("there is conflict in ur grammar");
-                //return false;
-            }
-
-            dict.Add(key, value);
-            return true;
         }
 
         public NonterminalNode<T> Parse(List<KeyValuePair<string, T>> tokens)
@@ -339,93 +322,61 @@ namespace Parser
             return (NonterminalNode<T>)nodes.Pop();
         }
 
-
-
-        private void SetupParseTable()
+        public NonterminalNode<T> Parse(List<KeyValuePair<string, T>> tokens, Dictionary<Production<T>, Func<Node[], Node>> ruleExecutions)
         {
-            List<LR1ItemSet<T>> sets = new List<LR1ItemSet<T>>();
-
-            sets.Add(new LR1ItemSet<T>(Grammar) { Items = new HashSet<LR1Item<T>>() { new LR1Item<T>() { DotPosition = 0, LookAhead = new TerminalSymbol<T>(EndOfStream), Production = Grammar.Productions.Last() } } });
-
-            ParseTable = new Dictionary<(int, T), ParserAction>();
-            GotoTable = new Dictionary<(int, string), int>();
-
-            sets[0].Closure();
-            //sets.Add(sets[0].PassSymbol(Grammar.Productions.Last().Symbols[0]));
-            //sets[1].Closure();
-
-            bool actionDone = true;
-            while(actionDone)
+            Stack<int> states = new Stack<int>();
+            Stack<Node> nodes = new Stack<Node>();
+            states.Push(0);
+            int position = 0;
+            KeyValuePair<string, T> token = tokens[position];
+            if (!ParseTable.ContainsKey((states.Peek(), token.Value)))
             {
-                actionDone = false;
-
-                for (int i = 0; i < sets.Count; i++)
-                {
-                    LR1ItemSet<T> set = sets[i];
-                    if (set.Items.Any(a => a.DotPosition == 1 && a.Production == Grammar.Productions.Last()))
-                    {
-                        actionDone = TryAdd(ParseTable, (i, EndOfStream), new ParserAction() { Type = ParserActionOption.Accept }) || actionDone;
-                    }
-                    foreach (LR1Item<T> item in set.Items.Where(a => a.DotPosition == a.Production.Symbols.Length))
-                    {
-                        if(item.Production.Left.Equals(Grammar.StartingSymbol))
-                        {
-                            continue;
-                        }
-                        actionDone = TryAdd(ParseTable, (i, item.LookAhead.TokenType), new ParserAction() { Type = ParserActionOption.Reduce, Parameter = Grammar.Productions.IndexOf(item.Production) }) || actionDone;
-                    }
-                    foreach (Symbol<T> symbol in set.Items.Select(a => a.NextSymbol).Where(a => a != null).Distinct())
-                    {
-                        LR1ItemSet<T> setToMaybeAdd = set.PassSymbol(symbol);
-                        setToMaybeAdd.Closure();
-
-                        TerminalSymbol<T> term = symbol as TerminalSymbol<T>;
-                        bool isTerm = term != null;
-
-
-                        bool foundOne = false;
-                        for (int j = 0; j < sets.Count; j++)
-                        {
-                            LR1ItemSet<T> setCheck = sets[j];
-
-                            //Does this work?
-                            if (setToMaybeAdd.EqualsOtherItemSet(setCheck))
-                            {
-                                foundOne = true;
-                                if (!isTerm)
-                                {
-                                    actionDone = TryAdd(GotoTable, (i, ((NonterminalSymbol<T>)symbol).Name), j) || actionDone;
-                                    continue;
-                                }
-
-                                if (term is TerminalEpsilon<T>)
-                                {
-                                    throw new Exception();
-                                }
-
-                                //Delibrately NOT breaking after this because I want it to throw in case of shift-shift conflict
-                                actionDone = TryAdd(ParseTable, (i, term.TokenType), new ParserAction() { Type = ParserActionOption.Shift, Parameter = j }) || actionDone;
-                            }
-                        }
-
-                        if (!foundOne)
-                        {
-                            if (isTerm)
-                            {
-                                TryAdd(ParseTable, (i, term.TokenType), new ParserAction() { Type = ParserActionOption.Shift, Parameter = sets.Count });
-                            }
-                            else
-                            {
-                                TryAdd(GotoTable, (i, ((NonterminalSymbol<T>)symbol).Name), sets.Count);
-                            }
-                            sets.Add(setToMaybeAdd);
-                            actionDone = true;
-                        }
-                    }
-                }
+                T[] acceptableTokens = ParseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                throw new Exception($"Unexpected {token.Value} token at start of file. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
             }
-        }
+            ParserAction action = ParseTable[(states.Peek(), token.Value)];
+            while (action.Type != ParserActionOption.Accept)
+            {
+                switch (action.Type)
+                {
+                    case ParserActionOption.Shift:
+                        states.Push(action.Parameter);
+                        nodes.Push(new Terminal<T>() { TokenType = token.Value, TokenValue = token.Key });
+                        position++;
+                        token = tokens[position];
+                        break;
+                    case ParserActionOption.Reduce:
+                        Production<T> prod = Grammar.Productions[action.Parameter];
+                        Node[] popped = new Node[prod.Symbols.Length];
+                        for (int i = popped.Length - 1; i >= 0; i--)
+                        {
+                            popped[i] = nodes.Pop();
+                            states.Pop();
+                        }
+                        Node nodeToPush;
+                        if(ruleExecutions.ContainsKey(prod))
+                        {
+                            nodeToPush = ruleExecutions[prod](popped);
+                        }
+                        else
+                        {
+                            nodeToPush = new NonterminalNode<T>(popped, prod.Left.Name, prod);
+                        }
+                        nodes.Push(nodeToPush);
+                        states.Push(GotoTable[(states.Peek(), prod.Left.Name)]);
+                        break;
+                    case ParserActionOption.Accept:
+                        break;
+                }
+                if (!ParseTable.ContainsKey((states.Peek(), token.Value)))
+                {
+                    T[] acceptableTokens = ParseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                    throw new Exception($"Unexpected {token.Value} token at token stream index {position}. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
+                }
+                action = ParseTable[(states.Peek(), token.Value)];
+            }
 
-        //private List<LR0Item>
+            return (NonterminalNode<T>)nodes.Pop();
+        }
     }
 }

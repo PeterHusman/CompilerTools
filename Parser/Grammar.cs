@@ -16,6 +16,7 @@ namespace Parser
         Newline,
         Whitespace,
         Comment,
+        Colon
         //AnythingElse
     }
 
@@ -101,6 +102,7 @@ namespace Parser
             [GrammarTokenType.Whitespace] = @"( |\t)+",
             [GrammarTokenType.Comment] = @"//[^\r\n]*",
             [GrammarTokenType.Newline] = @"[\r\n]+",
+            [GrammarTokenType.Colon] = ":"
             //[GrammarTokenType.AnythingElse] = @"\S+"
         }, new HashSet<GrammarTokenType> { GrammarTokenType.Whitespace, GrammarTokenType.Comment }, a => (int)a, GrammarTokenType.Newline);
 
@@ -214,6 +216,141 @@ namespace Parser
             }
 
             return new Grammar<T>(prods);
+        }
+
+        public static (Grammar<T>, Dictionary<Production<T>, Func<Node[], Node>>) FromTextDefinitionWithProductionNodeFunctions(string text, Dictionary<string, Func<Node[], Node>> functionsToUse)
+        {
+            Dictionary<Production<T>, Func<Node[], Node>> funcs = new Dictionary<Production<T>, Func<Node[], Node>>();
+            List<Production<T>> prods = new List<Production<T>>();
+            var tokenStream = tokenizer.Tokenize(text + "\n");
+            NonterminalSymbol<T> currentLeft = null;
+            List<Production<T>> leftProds = new List<Production<T>>();
+            List<Symbol<T>> symbols = new List<Symbol<T>>();
+
+            Dictionary<string, NonterminalSymbol<T>> nonterms = new Dictionary<string, NonterminalSymbol<T>>();
+
+            int state = 0;
+
+            foreach (var tokenThing in tokenStream)
+            {
+                switch (state)
+                {
+                    case 0:
+                        if (tokenThing.Value == GrammarTokenType.Newline)
+                        {
+                            break;
+                        }
+                        if (tokenThing.Value != GrammarTokenType.Identifier && tokenThing.Value != GrammarTokenType.Pipe)
+                        {
+                            throw new Exception();
+                        }
+                        if (tokenThing.Value == GrammarTokenType.Identifier)
+                        {
+                            nonterms.Add(tokenThing.Key, new NonterminalSymbol<T>(null, tokenThing.Key));
+                        }
+                        state = 1;
+                        break;
+                    case 1:
+                        if (tokenThing.Value == GrammarTokenType.Newline)
+                        {
+                            state = 0;
+                        }
+                        break;
+                }
+            }
+
+            state = 0;
+            foreach (var token in tokenStream)
+            {
+                GrammarTokenType tokenType = token.Value;
+                string tokenValue = token.Key;
+
+                switch (state)
+                {
+                    case 0:
+                        if (tokenType == GrammarTokenType.Newline)
+                        {
+                            break;
+                        }
+                        if (tokenType != GrammarTokenType.Identifier && tokenType != GrammarTokenType.Pipe)
+                        {
+                            throw new Exception();
+                        }
+                        if (tokenType == GrammarTokenType.Identifier)
+                        {
+                            currentLeft = nonterms[tokenValue];
+                            leftProds = new List<Production<T>>();
+                            state = 2;
+                            break;
+                        }
+                        state = 1;
+                        break;
+                    case 1:
+                        if (tokenType == GrammarTokenType.Newline)
+                        {
+                            var prod = new Production<T>(symbols.ToArray(), currentLeft);
+                            leftProds.Add(prod);
+                            prods.Add(prod);
+                            currentLeft.Productions = leftProds.ToArray();
+                            symbols = new List<Symbol<T>>();
+                            state = 0;
+                            break;
+                        }
+
+                        if(tokenType == GrammarTokenType.Colon)
+                        {
+                            var prod = new Production<T>(symbols.ToArray(), currentLeft);
+                            leftProds.Add(prod);
+                            prods.Add(prod);
+                            currentLeft.Productions = leftProds.ToArray();
+                            symbols = new List<Symbol<T>>();
+                            state = 3;
+                            break;
+                        }
+
+                        if (tokenType == GrammarTokenType.Identifier)
+                        {
+                            if (nonterms.ContainsKey(tokenValue))
+                            {
+                                symbols.Add(nonterms[tokenValue]);
+                            }
+                            else
+                            {
+                                symbols.Add(new TerminalSymbol<T>((T)Enum.Parse(typeof(T), tokenValue)));
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception();
+                        }
+                        break;
+                    case 2:
+                        if (tokenType == GrammarTokenType.Equals)
+                        {
+                            state = 1;
+                            break;
+                        }
+                        throw new Exception();
+                    case 3:
+                        if(tokenType != GrammarTokenType.Identifier)
+                        {
+                            throw new Exception();
+                        }
+
+                        funcs.Add(prods[prods.Count - 1], functionsToUse[tokenValue]);
+                        state = 4;
+                        break;
+                    case 4:
+                        if (tokenType != GrammarTokenType.Newline)
+                        {
+                            throw new Exception();
+                        }
+                        state = 0;
+                        break;
+                }
+            }
+
+            return (new Grammar<T>(prods), funcs);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿NamespacedCompilationUnit = NamespaceKeyword Identifier OpenCurlyBrace CompilationUnit CloseCurlyBrace
 						  | CompilationUnit
 
-CompilationUnit = CompilationUnit Class
+CompilationUnit = CompilationUnit Class : MakeFlatList
 				| Class
 
 
@@ -25,9 +25,9 @@ VarOrFieldReference = Namespaced
 Namespaced = Namespaced DotOperator Identifier
 		   | Identifier
 
-ClassMembers = ClassMembers FieldDecl
-			 | ClassMembers MethodDecl
-			 | ClassMembers CtorDecl
+ClassMembers = ClassMembers FieldDecl : MakeFlatList
+			 | ClassMembers MethodDecl : MakeFlatList
+			 | ClassMembers CtorDecl : MakeFlatList
 			 | FieldDecl
 			 | MethodDecl
 			 | CtorDecl
@@ -47,23 +47,23 @@ CtorDecl = OptionalAccessModifier OptionalStatic Identifier ParamsInParens OpenC
 ParamsInParens = OpenParenthesis ParameterList CloseParenthesis
 			   | OpenParenthesis CloseParenthesis
 
-ParameterList = ParameterList Comma Parameter
+ParameterList = ParameterList Comma Parameter : MakeFlatList
 			  | Parameter
 
 Parameter = TypeName Identifier
 
-Statements = Statements Statement
+Statements = Statements Statement : MakeFlatList
 		   | Statement
 
 Statement = Semicolon
 	      | FunctionCall Semicolon
-		  | VarDecl
-		  | IfStatement
-		  | WhileLoop
+		  | VarDecl : Identity
+		  | IfStatement : Identity
+		  | WhileLoop : Identity
 		  | IncrementExpr Semicolon
 		  | DecrementExpr Semicolon
 		  | AssignmentExpr Semicolon
-		  | ReturnStatement
+		  | ReturnStatement : Identity
 
 
 VarDecl = TypeName Identifier Semicolon
@@ -85,7 +85,7 @@ FunctionCall = Factor PassedParamsInParens
 PassedParamsInParens = OpenParenthesis CloseParenthesis
 					 | OpenParenthesis PassedParamsList CloseParenthesis
 
-PassedParamsList = PassedParamsList Comma Expression
+PassedParamsList = PassedParamsList Comma Expression : MakeFlatList
 				 | Expression
 
 IncrementExpr = VarOrFieldReference Increment

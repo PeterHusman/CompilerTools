@@ -46,6 +46,7 @@
     <Compile Include="AugmentedGrammar.cs" />
     <Compile Include="BottomUpParser.cs" />
     <Compile Include="Grammar.cs" />
+    <Compile Include="InternalParserStuff.cs" />
     <Compile Include="LR1Parser.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="NonterminalNode.cs" />
