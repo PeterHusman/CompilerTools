@@ -378,5 +378,62 @@ namespace Parser
 
             return (NonterminalNode<T>)nodes.Pop();
         }
+
+        public object Parse(List<KeyValuePair<string, T>> tokens, Dictionary<Production<T>, Func<object[], object>> ruleExecutions)
+        {
+            Stack<int> states = new Stack<int>();
+            Stack<object> nodes = new Stack<object>();
+            states.Push(0);
+            int position = 0;
+            KeyValuePair<string, T> token = tokens[position];
+            if (!ParseTable.ContainsKey((states.Peek(), token.Value)))
+            {
+                T[] acceptableTokens = ParseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                throw new Exception($"Unexpected {token.Value} token at start of file. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
+            }
+            ParserAction action = ParseTable[(states.Peek(), token.Value)];
+            while (action.Type != ParserActionOption.Accept)
+            {
+                switch (action.Type)
+                {
+                    case ParserActionOption.Shift:
+                        states.Push(action.Parameter);
+                        nodes.Push(new Terminal<T>() { TokenType = token.Value, TokenValue = token.Key });
+                        position++;
+                        token = tokens[position];
+                        break;
+                    case ParserActionOption.Reduce:
+                        Production<T> prod = Grammar.Productions[action.Parameter];
+                        object[] popped = new object[prod.Symbols.Length];
+                        for (int i = popped.Length - 1; i >= 0; i--)
+                        {
+                            popped[i] = nodes.Pop();
+                            states.Pop();
+                        }
+                        object nodeToPush;
+                        if (ruleExecutions.ContainsKey(prod))
+                        {
+                            nodeToPush = ruleExecutions[prod](popped);
+                        }
+                        else
+                        {
+                            nodeToPush = popped;//new NonterminalNode<T>(popped, prod.Left.Name, prod);
+                        }
+                        nodes.Push(nodeToPush);
+                        states.Push(GotoTable[(states.Peek(), prod.Left.Name)]);
+                        break;
+                    case ParserActionOption.Accept:
+                        break;
+                }
+                if (!ParseTable.ContainsKey((states.Peek(), token.Value)))
+                {
+                    T[] acceptableTokens = ParseTable.Keys.Where(a => a.Item1 == states.Peek()).Select(a => a.Item2).ToArray();
+                    throw new Exception($"Unexpected {token.Value} token at token stream index {position}. Acceptable tokens for this position are: {acceptableTokens.Select(a => "\n" + a.ToString()).Aggregate((a, b) => a + b)}");
+                }
+                action = ParseTable[(states.Peek(), token.Value)];
+            }
+
+            return nodes.Pop();
+        }
     }
 }

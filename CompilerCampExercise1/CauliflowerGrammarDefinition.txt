@@ -98,22 +98,22 @@ Expression = AddSubExpression Equality AddSubExpression
 		   | AddSubExpression LessThan AddSubExpression
 		   | AddSubExpression GreaterThan AddSubExpression
 		   | AddSubExpression NotEquals AddSubExpression
-		   | AddSubExpression
+		   | AddSubExpression// : Identity
 
 AddSubExpression = AddSubExpression PlusOperator Term
 		   | AddSubExpression MinusOperator Term
-		   | Term
+		   | Term : Identity
 
-Factor = OpenParenthesis Expression CloseParenthesis
-       | IntLiteral
-	   | StringLiteral
-	   | BoolLiteral
-	   | VarOrFieldReference
-	   | FunctionCall
+Factor = OpenParenthesis Expression CloseParenthesis : Second
+       | IntLiteral : Identity
+	   | StringLiteral : Identity
+	   | BoolLiteral : Identity
+	   | VarOrFieldReference : Identity
+	   | FunctionCall : Identity
 
 Term = Term MultiplyOperator Factor
 	 | Term DivideOperator Factor
-	 | Factor
+	 | Factor : Identity
 
 
 ReturnStatement = ReturnKeyword Expression Semicolon

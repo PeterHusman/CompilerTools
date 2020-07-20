@@ -51,6 +51,10 @@ namespace Parser
         {
             get
             {
+                if(Children.Length == 0)
+                {
+                    return "";
+                }
                 return Children.Select(a => a.FullToString).Aggregate((a, b) => $"{a} {b}");
             }
         }

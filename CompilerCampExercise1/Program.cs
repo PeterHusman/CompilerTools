@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using Tokenizer;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Diagnostics;
+using ObjectExaminer;
 
 namespace CompilerCampExercise1
 {   
@@ -37,6 +39,29 @@ namespace CompilerCampExercise1
             return nodes[0];
         }
 
+        static Node Second(Node[] nodes)
+        {
+            return nodes[1];
+        }
+
+        static object Identity(object[] nodes)
+        {
+            return nodes[0];
+        }
+
+        static object Second(object[] nodes)
+        {
+            return nodes[1];
+        }
+
+        static IEnumerable<Func<T[], T>> GetFuncs<T>()
+        {
+            IEnumerable<MethodInfo> methods = typeof(Program).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+
+            IEnumerable<MethodInfo> methodsOfRightType = methods.Where(a => a.GetParameters().Length == 1 && a.GetParameters()[0].ParameterType == typeof(T[]) && a.ReturnType == typeof(T));
+
+            return methodsOfRightType.Select(a => (Func<T[], T>)a.CreateDelegate(typeof(Func<T[], T>)));
+        }
 
         //World's worst tokenizer, do not use
         static void Main(string[] args)
@@ -56,21 +81,27 @@ namespace CompilerCampExercise1
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
             }
 
-            IEnumerable<MethodInfo> methods = typeof(Program).GetMethods(System.Reflection.BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+            var availableFuncs = GetFuncs<Node>();
 
-            (Grammar<ThingType> grammar, Dictionary<Production<ThingType>, Func<Node[], Node>> funcs) = Grammar<ThingType>.FromTextDefinitionWithProductionNodeFunctions(File.ReadAllText(@"../../CauliflowerGrammarDefinition.txt"), methods.Where(a => a.GetParameters().Length == 1 && a.GetParameters()[0].ParameterType == typeof(Node[]) && a.ReturnType == typeof(Node)).Select(a => (Func<Node[], Node>)a.CreateDelegate(typeof(Func<Node[], Node>))).ToDictionary(a => a.Method.Name));
+            (Grammar<ThingType> grammar, var funcs) = Grammar<ThingType>.FromTextDefinitionWithProductionNodeFunctions(File.ReadAllText(@"../../CauliflowerGrammarDefinition.txt"), availableFuncs.ToDictionary(a => a.Method.Name));
             AugmentedGrammar<ThingType> augmentedGrammar = new AugmentedGrammar<ThingType>(grammar);
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augmentedGrammar, ThingType.EndOfStream);
-            NonterminalNode<ThingType> root = parser.Parse(thingies, funcs);
+            object root = parser.Parse(thingies, funcs);
 
-            RenderNode(root);
+            //RenderNode(root);
 
+            /*
             var parseTreeExplorer = new ParseTreeExplorer.ParseTreeExplorer();
             parseTreeExplorer.LoadParseTree(root);
             parseTreeExplorer.ShowDialog();
+            */
 
-            Console.ReadKey(true);
+            var objectExplorer = new ObjectExaminerForm();
+            objectExplorer.LoadObject(root);
+            objectExplorer.ShowDialog();
+
+            //Console.ReadKey(true);
 
 #if false
             Grammar<ThingType> grammar = Grammar<ThingType>.FromTextDefinition(File.ReadAllText(@"../../GrammarDefinition.txt"));
