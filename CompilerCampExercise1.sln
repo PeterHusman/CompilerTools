@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CauliflowerSpecifics", "Cau
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectExaminer", "ObjectExaminer\ObjectExaminer.csproj", "{2890A39A-C9B8-468C-9903-89749B8B36D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeChecking", "TypeChecking\TypeChecking.csproj", "{B29D0418-85E8-4199-A889-7570E015780A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{2890A39A-C9B8-468C-9903-89749B8B36D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2890A39A-C9B8-468C-9903-89749B8B36D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2890A39A-C9B8-468C-9903-89749B8B36D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B29D0418-85E8-4199-A889-7570E015780A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B29D0418-85E8-4199-A889-7570E015780A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B29D0418-85E8-4199-A889-7570E015780A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B29D0418-85E8-4199-A889-7570E015780A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

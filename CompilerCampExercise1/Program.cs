@@ -76,10 +76,10 @@ namespace CompilerCampExercise1
 
             Span<KeyValuePair<string, ThingType>> tokens = new Span<KeyValuePair<string, ThingType>>(thingies.ToArray());
 
-            foreach (var v in thingies)
+            /*foreach (var v in thingies)
             {
                 Console.WriteLine($"({v.Key}, {v.Value.ToString()})");
-            }
+            }*/
 
             var availableFuncs = GetFuncs<Node>();
 
@@ -87,19 +87,21 @@ namespace CompilerCampExercise1
             AugmentedGrammar<ThingType> augmentedGrammar = new AugmentedGrammar<ThingType>(grammar);
 
             LR1Parser<ThingType> parser = new LR1Parser<ThingType>(augmentedGrammar, ThingType.EndOfStream);
-            object root = parser.Parse(thingies, funcs);
+            var root = parser.Parse(thingies, funcs);
 
             //RenderNode(root);
 
-            /*
+            
             var parseTreeExplorer = new ParseTreeExplorer.ParseTreeExplorer();
             parseTreeExplorer.LoadParseTree(root);
             parseTreeExplorer.ShowDialog();
-            */
+            
 
+            /*
             var objectExplorer = new ObjectExaminerForm();
             objectExplorer.LoadObject(root);
             objectExplorer.ShowDialog();
+            */
 
             //Console.ReadKey(true);
 
