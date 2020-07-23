@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Diagnostics;
 using ObjectExaminer;
+using TypeChecking;
 
 namespace CompilerCampExercise1
 {   
@@ -95,8 +96,9 @@ namespace CompilerCampExercise1
             var parseTreeExplorer = new ParseTreeExplorer.ParseTreeExplorer();
             parseTreeExplorer.LoadParseTree(root);
             parseTreeExplorer.ShowDialog();
-            
 
+            TypeChecker typeChecker = new TypeChecker();
+            typeChecker.TypeCheck(root);
             /*
             var objectExplorer = new ObjectExaminerForm();
             objectExplorer.LoadObject(root);

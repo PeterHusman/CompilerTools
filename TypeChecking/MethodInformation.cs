@@ -11,13 +11,27 @@ namespace TypeChecking
     public class MethodInformation
     {
         public CaulType ReturnType { get; set; }
+        public string Name { get; set; }
         public List<ParameterInformation> Parameters { get; set; }
 
-        internal static MethodInformation FromNontermin\u0061l(NonterminalNode<ThingType> member)
+        internal static MethodInformation FromNontermin\u0061l(NonterminalNode<ThingType> member, CaulType retType = null)
         {
             MethodInformation methodInfo = new MethodInformation();
 
-            methodInfo.ReturnType = CaulType.FromNonterminal(TypeTypes.GetChild(member, "TypeName"));
+            methodInfo.Name = member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
+            if(!member.Children.Any(a => a is NonterminalNode<ThingType> nonterm && nonterm.Name == "TypeName"))
+            {
+                methodInfo.Name = ".ctor";
+            }
+
+            if (retType != null)
+            {
+                methodInfo.ReturnType = retType;
+            }
+            else
+            {
+                methodInfo.ReturnType = CaulType.FromNonterminal(TypeTypes.GetChild(member, "TypeName"));
+            }
 
             var paramsInParens = TypeTypes.GetChild(member, "ParamsInParens");
 

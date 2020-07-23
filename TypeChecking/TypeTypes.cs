@@ -20,6 +20,17 @@ namespace TypeChecking
 
         public Dictionary<string, FieldInformation> StaticFields { get; set; } = new Dictionary<string, FieldInformation>();
 
+        public bool TryGetStaticMethod(string name, out MethodInformation method)
+        {
+            if(StaticMethods.ContainsKey(name))
+            {
+                method = StaticMethods[name];
+                return true;
+            }
+            method = null;
+            return false;
+        }
+
         public void Scan(NonterminalNode<ThingType> nonterm)
         {
             NonterminalNode<ThingType> members = (NonterminalNode<ThingType>)nonterm.Children.FirstOrDefault(a => a is NonterminalNode<ThingType> b && b.Name == "ClassMembers");
@@ -32,7 +43,7 @@ namespace TypeChecking
                 if (member.Name == "FieldDecl")
                 {
                     FieldInformation field = FieldInformation.FromNonterminal(member);
-                    if(((NonterminalNode<ThingType>)member.Children[1]).Children.Length > 0)
+                    if (((NonterminalNode<ThingType>)member.Children[1]).Children.Length > 0)
                     {
                         StaticFields.Add(field.Name, field);
                     }
@@ -43,16 +54,26 @@ namespace TypeChecking
                 }
                 else if (member.Name == "MethodDecl")
                 {
-                    string name = member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
+                    //string name = member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
                     MethodInformation method = MethodInformation.FromNonterminal(member);
                     if (((NonterminalNode<ThingType>)member.Children[1]).Children.Length > 0)
                     {
-                        StaticMethods.Add(name, method);
+                        StaticMethods.Add(method.Name, method);
                     }
                     else
                     {
-                        Methods.Add(name, method);
+                        Methods.Add(method.Name, method);
                     }
+                }
+                else if (member.Name == "CtorDecl")
+                {
+                    string name = ".ctor";//member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
+                    MethodInformation method = MethodInformation.FromNonterminal(member, CaulType.Void);
+                    Methods.Add(name, method);
+                }
+                else
+                {
+                    throw new Exception();
                 }
             }
         }

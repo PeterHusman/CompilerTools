@@ -101,6 +101,10 @@
       <Project>{F23A5C7A-BD1E-44A9-84CD-66D09880A6B5}</Project>
       <Name>Tokenizer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TypeChecking\TypeChecking.csproj">
+      <Project>{B29D0418-85E8-4199-A889-7570E015780A}</Project>
+      <Name>TypeChecking</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
