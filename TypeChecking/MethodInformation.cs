@@ -10,11 +10,11 @@ namespace TypeChecking
 {
     public class MethodInformation
     {
-        public CaulType ReturnType { get; set; }
+        public TypeTypes ReturnType { get; set; }
         public string Name { get; set; }
         public List<ParameterInformation> Parameters { get; set; }
 
-        internal static MethodInformation FromNontermin\u0061l(NonterminalNode<ThingType> member, CaulType retType = null)
+        internal static MethodInformation FromNontermin\u0061l(NonterminalNode<ThingType> member, TypeTypes retType = null)
         {
             MethodInformation methodInfo = new MethodInformation();
 
@@ -30,7 +30,7 @@ namespace TypeChecking
             }
             else
             {
-                methodInfo.ReturnType = CaulType.FromNonterminal(TypeTypes.GetChild(member, "TypeName"));
+                methodInfo.ReturnType = TypeTypes.FromTypeNameNonterminal(TypeTypes.GetChild(member, "TypeName"));
             }
 
             var paramsInParens = TypeTypes.GetChild(member, "ParamsInParens");

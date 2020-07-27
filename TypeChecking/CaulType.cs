@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace TypeChecking
-{
+{/*
     public class CaulType
     {
         public string Name { get; set; }
@@ -30,5 +30,5 @@ namespace TypeChecking
         {
             return Name;
         }
-    }
+    }*/
 }

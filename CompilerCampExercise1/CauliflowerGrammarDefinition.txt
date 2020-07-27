@@ -98,7 +98,7 @@ Expression = AddSubExpression Equality AddSubExpression
 		   | AddSubExpression LessThan AddSubExpression
 		   | AddSubExpression GreaterThan AddSubExpression
 		   | AddSubExpression NotEquals AddSubExpression
-		   | AddSubExpression// : Identity
+		   | AddSubExpression : Identity
 
 AddSubExpression = AddSubExpression PlusOperator Term
 		   | AddSubExpression MinusOperator Term

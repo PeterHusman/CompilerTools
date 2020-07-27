@@ -12,7 +12,7 @@ namespace TypeChecking
 
         public Scope Current => Scopes.Peek();
 
-        public CaulType Search(string name)
+        public TypeTypes Search(string name)
         {
             foreach(Scope scope in Scopes)
             {
@@ -25,7 +25,7 @@ namespace TypeChecking
             return null;
         }
 
-        public bool TrySearch(string name, out CaulType type)
+        public bool TrySearch(string name, out TypeTypes type)
         {
             foreach (Scope scope in Scopes)
             {
