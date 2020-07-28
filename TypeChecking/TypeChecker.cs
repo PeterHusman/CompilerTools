@@ -100,6 +100,20 @@ namespace TypeChecking
             scopeStack.Push(new Scope() { Types = parameterTypeInfo });
 
             //TODO: Typecheck body
+            TypeCheckBody(scopeStack, (NonterminalNode<ThingType>)memberNode.Children.FirstOrDefault(a => a is NonterminalNode<ThingType> b && b.Name == "Statements"), classType);
+        }
+
+        void TypeCheckBody(ScopeStack scopes, NonterminalNode<ThingType> statementsList, TypeTypes classInfo)
+        {
+            if(statementsList == null)
+            { return; }
+
+            NonterminalNode<ThingType>[] statements = statementsList.Children.Select(a => (NonterminalNode<ThingType>)a).ToArray();
+
+            foreach(NonterminalNode<ThingType> statement in statements)
+            {
+                //if(statement.Name == "")
+            }
         }
 
         void TypeCheckFieldDecl(NonterminalNode<ThingType> memberNode, TypeTypes classType)
