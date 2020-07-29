@@ -11,13 +11,30 @@ namespace TypeChecking
 {
     public class TypeTypes
     {
-        public static TypeTypes IntType { get; } = new TypeTypes() { Methods = new List<MethodInformation>() { new MethodInformation() { Name = "ToString", ReturnType = StringType, Parameters = new List<ParameterInformation>() } } };//FromDotNetType(typeof(int));
+        public static TypeTypes IntType { get; }//FromDotNetType(typeof(int));
 
-        public static TypeTypes StringType { get; } = new TypeTypes() { Methods = new List<MethodInformation>() { new MethodInformation() { Name = "ToString", ReturnType = StringType, Parameters = new List<ParameterInformation>() } } };//FromDotNetType(typeof(string));
+        public static TypeTypes StringType { get; }//FromDotNetType(typeof(string));
 
-        public static TypeTypes BoolType { get; } = new TypeTypes() { Methods = new List<MethodInformation>() { new MethodInformation() { Name = "ToString", ReturnType = StringType, Parameters = new List<ParameterInformation>() } } };//FromDotNetType(typeof(bool));
+        public static TypeTypes BoolType { get; }//FromDotNetType(typeof(bool));
 
-        public static TypeTypes Void { get; } = new TypeTypes();
+        public static TypeTypes Void { get; }
+
+        static TypeTypes()
+        {
+            StringType = new TypeTypes() { Methods = new List<MethodInformation>() { new MethodInformation() { Name = "ToString", Parameters = new List<ParameterInformation>() } } };
+            StringType.Methods[0].ReturnType = StringType;
+            IntType = new TypeTypes() { Methods = new List<MethodInformation>() { new MethodInformation() { Name = "ToString", ReturnType = StringType, Parameters = new List<ParameterInformation>() } }, StaticMethods = new List<MethodInformation>() { new MethodInformation() { Name = "Parse", Parameters = new List<ParameterInformation>() } } };
+            BoolType = new TypeTypes() { Methods = new List<MethodInformation>() { new MethodInformation() { Name = "ToString", ReturnType = StringType, Parameters = new List<ParameterInformation>() } } }; ;
+            IntType.StaticMethods[0].Parameters.Add(new ParameterInformation() { Name = "value", Type = StringType });
+            IntType.StaticMethods[0].ReturnType = IntType;
+
+            Void = new TypeTypes();
+
+            typeRefs = new Dictionary<string, TypeTypes> { ["int"] = IntType, ["Int32"] = IntType, ["bool"] = BoolType, ["Boolean"] = BoolType, ["string"] = StringType, ["String"] = StringType, ["void"] = Void };
+            dotNetTypes = new Dictionary<TypeTypes, Type> { [IntType] = typeof(int), [BoolType] = typeof(bool), [StringType] = typeof(string), [Void] = typeof(void) };
+            dotNetFieldInfos = new Dictionary<FieldInformation, FieldInfo>();
+            dotNetMethodInfos = new Dictionary<MethodInformation, MethodInfo> { [IntType.Methods[0]] = typeof(int).GetMethod("ToString", new Type[0]), [BoolType.Methods[0]] = typeof(bool).GetMethod("ToString", new Type[0]), [StringType.Methods[0]] = typeof(string).GetMethod("ToString", new Type[0]) };
+        }
 
         private static void PopulateDotNetType(Type type, TypeTypes typeTypes)
         {
@@ -59,10 +76,13 @@ namespace TypeChecking
                 ConservativelyLoadDotNetType(v.First());
             }
             return typeRefs[typeName];
-            throw new NotImplementedException();
         }
 
-        private static Dictionary<string, TypeTypes> typeRefs = new Dictionary<string, TypeTypes> { ["int"] = IntType, ["Int32"] = IntType, ["bool"] = BoolType, ["Boolean"] = BoolType, ["string"] = StringType, ["String"] = StringType, ["void"] = Void };
+        public static Dictionary<string, TypeTypes> typeRefs;
+
+        public static Dictionary<TypeTypes, Type> dotNetTypes;
+        public static Dictionary<FieldInformation, FieldInfo> dotNetFieldInfos;
+        public static Dictionary<MethodInformation, MethodInfo> dotNetMethodInfos;
 
         private static void ConservativelyLoadDotNetType(Type type)
         {
@@ -71,12 +91,16 @@ namespace TypeChecking
 
             foreach (System.Reflection.FieldInfo inf in type.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).Where(a => typeRefs.ContainsKey(a.FieldType.Name)))
             {
-                typeRefs[type.Name].Fields.Add(inf.Name, new FieldInformation() { Name = inf.Name, Type = FromDotNetType(inf.FieldType) });
+                FieldInformation toAdd = new FieldInformation() { Name = inf.Name, Type = FromDotNetType(inf.FieldType) };
+                typeRefs[type.Name].Fields.Add(inf.Name, toAdd);
+                dotNetFieldInfos.Add(toAdd, inf);
             }
 
             foreach (System.Reflection.FieldInfo inf in type.GetFields(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public).Where(a => typeRefs.ContainsKey(a.FieldType.Name)))
             {
-                typeRefs[type.Name].StaticFields.Add(inf.Name, new FieldInformation() { Name = inf.Name, Type = FromDotNetType(inf.FieldType) });
+                FieldInformation toAdd = new FieldInformation() { Name = inf.Name, Type = FromDotNetType(inf.FieldType) };
+                typeRefs[type.Name].StaticFields.Add(inf.Name, toAdd);
+                dotNetFieldInfos.Add(toAdd, inf);
             }
 
             foreach (System.Reflection.MethodInfo inf in type.GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).Where(a => typeRefs.ContainsKey(a.ReturnType.Name) && a.GetParameters().All(b => typeRefs.ContainsKey(b.ParameterType.Name))))
@@ -85,7 +109,9 @@ namespace TypeChecking
                 {
                     continue;
                 }
-                typeRefs[type.Name].Methods.Add(new MethodInformation() { Name = inf.Name, ReturnType = FromDotNetType(inf.ReturnType), Parameters = inf.GetParameters().Select(a => new ParameterInformation() { Name = a.Name, Type = FromDotNetType(a.ParameterType) }).ToList() });
+                MethodInformation toAdd = new MethodInformation() { Name = inf.Name, ReturnType = FromDotNetType(inf.ReturnType), Parameters = inf.GetParameters().Select(a => new ParameterInformation() { Name = a.Name, Type = FromDotNetType(a.ParameterType) }).ToList() };
+                typeRefs[type.Name].Methods.Add(toAdd);
+                dotNetMethodInfos.Add(toAdd, inf);
             }
 
             foreach (System.Reflection.MethodInfo inf in type.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public).Where(a => typeRefs.ContainsKey(a.ReturnType.Name) && a.GetParameters().All(b => typeRefs.ContainsKey(b.ParameterType.Name))))
@@ -94,7 +120,9 @@ namespace TypeChecking
                 {
                     continue;
                 }
-                typeRefs[type.Name].StaticMethods.Add(new MethodInformation() { Name = inf.Name, ReturnType = FromDotNetType(inf.ReturnType), Parameters = inf.GetParameters().Select(a => new ParameterInformation() { Name = a.Name, Type = FromDotNetType(a.ParameterType) }).ToList() });
+                MethodInformation toAdd = new MethodInformation() { Name = inf.Name, ReturnType = FromDotNetType(inf.ReturnType), Parameters = inf.GetParameters().Select(a => new ParameterInformation() { Name = a.Name, Type = FromDotNetType(a.ParameterType) }).ToList() };
+                typeRefs[type.Name].StaticMethods.Add(toAdd);
+                dotNetMethodInfos.Add(toAdd, inf);
             }
 
         }
@@ -147,7 +175,8 @@ namespace TypeChecking
             NonterminalNode<ThingType> members = (NonterminalNode<ThingType>)nonterm.Children.FirstOrDefault(a => a is NonterminalNode<ThingType> b && b.Name == "ClassMembers");
             if (members == null)
             {
-                return;
+                throw new Exception();
+                //return;
             }
             foreach (NonterminalNode<ThingType> member in members.Children.Select(a => (NonterminalNode<ThingType>)a))
             {
@@ -178,7 +207,7 @@ namespace TypeChecking
                 }
                 else if (member.Name == "CtorDecl")
                 {
-                    string name = ".ctor";//member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
+                    //string name = ".ctor";//member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
                     MethodInformation method = MethodInformation.FromNonterminal(member, TypeTypes.Void);
                     AttemptAddMethod(method);
                 }
@@ -209,7 +238,7 @@ namespace TypeChecking
             StaticMethods.Add(inf);
         }
 
-        internal static NonterminalNode<ThingType> GetChild(NonterminalNode<ThingType> node, string name)
+        public static NonterminalNode<ThingType> GetChild(NonterminalNode<ThingType> node, string name)
         {
             return (NonterminalNode<ThingType>)node.Children.FirstOrDefault(a => a is NonterminalNode<ThingType> b && b.Name == name);
         }

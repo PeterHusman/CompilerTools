@@ -106,6 +106,4 @@
     {
         public int lalala;
     }
-
-    class Data(int One, int Two);
 }

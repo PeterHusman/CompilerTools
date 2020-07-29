@@ -10,7 +10,7 @@ namespace TypeChecking
 {
     public class TypeChecker
     {
-        Dictionary<string, TypeTypes> symbols = new Dictionary<string, TypeTypes>();
+        //Dictionary<string, TypeTypes> symbols = new Dictionary<string, TypeTypes>();
 
         public void TypeCheck(NonterminalNode<ThingType> root)
         {
@@ -22,7 +22,7 @@ namespace TypeChecking
             {
                 TypeTypes typeTypes = new TypeTypes();
                 typeTypes.Scan(nonterm);
-                symbols.Add(((Terminal<ThingType>)nonterm.Children.First(a => a is Terminal<ThingType> b && b.TokenType == ThingType.Identifier)).TokenValue, typeTypes);
+                TypeTypes.typeRefs.Add(((Terminal<ThingType>)nonterm.Children.First(a => a is Terminal<ThingType> b && b.TokenType == ThingType.Identifier)).TokenValue, typeTypes);
             }
 
             foreach (NonterminalNode<ThingType> classNode in node.Children)
@@ -30,7 +30,13 @@ namespace TypeChecking
                 indices = new Dictionary<string, int>();
                 staticIndices = new Dictionary<string, int>();
                 var classMembersNode = TypeTypes.GetChild(classNode, "ClassMembers");
-                TypeTypes classType = symbols[((Terminal<ThingType>)classNode.Children.First(a => a is Terminal<ThingType> b && b.TokenType == ThingType.Identifier)).TokenValue];
+                TypeTypes classType = TypeTypes.typeRefs[((Terminal<ThingType>)classNode.Children.First(a => a is Terminal<ThingType> b && b.TokenType == ThingType.Identifier)).TokenValue];
+
+                if(classMembersNode == null)
+                {
+                    TypeCheckRecord(classNode, classType);
+                    continue;
+                }
 
                 foreach(NonterminalNode<ThingType> memberNode in classMembersNode.Children)
                 {
@@ -46,6 +52,11 @@ namespace TypeChecking
                     }
                 }
             }
+        }
+
+        void TypeCheckRecord(NonterminalNode<ThingType> classNode, TypeTypes classType)
+        {
+            throw new NotImplementedException();
         }
 
 

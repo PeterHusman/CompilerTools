@@ -8,6 +8,7 @@ namespace CauliflowerSpecifics
 {
     public enum ThingType
     {
+        Comment,
         IntLiteral,
         ElseKeyword,
         Equality,
@@ -36,7 +37,6 @@ namespace CauliflowerSpecifics
         Identifier,
         Semicolon,
         Whitespace,
-        Comment,
         OpenParenthesis,
         CloseParenthesis,
         Comma,

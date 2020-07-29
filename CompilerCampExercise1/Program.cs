@@ -17,7 +17,7 @@ using ObjectExaminer;
 using TypeChecking;
 
 namespace CompilerCampExercise1
-{   
+{
     class Program
     {
         static Node MakeFlatList(Node[] nodes)

@@ -16,6 +16,7 @@ namespace EmissionTests
             var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndSave);
             var moduleBuilder = assemblyBuilder.DefineDynamicModule("testModule",  "Test.exe");
             var typeBuilder = moduleBuilder.DefineType("testClass");
+            Type type = typeBuilder as Type;
             var methodBuilder = typeBuilder.DefineMethod("Hi", MethodAttributes.Public | MethodAttributes.Static, typeof(void), new Type[0]);
             var ilGenerator = methodBuilder.GetILGenerator();
 
