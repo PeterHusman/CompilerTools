@@ -14,7 +14,7 @@ namespace TypeChecking
 
         public void TypeCheck(NonterminalNode<ThingType> root)
         {
-            ScopeStack scopes = new ScopeStack();
+            ScopeStack<string, TypeTypes> scopes = new ScopeStack<string, TypeTypes>();
 
 
             var node = TypeTypes.GetChild(root, "CompilationUnit");
@@ -107,14 +107,14 @@ namespace TypeChecking
                 parameterTypeInfo.Add(v.Key, v.Value);
             }
 
-            ScopeStack scopeStack = new ScopeStack();
-            scopeStack.Push(new Scope() { Types = parameterTypeInfo });
+            ScopeStack<string, TypeTypes> scopeStack = new ScopeStack<string, TypeTypes>();
+            scopeStack.Push(new Scope<string, TypeTypes>() { Types = parameterTypeInfo });
 
             //TODO: Typecheck body
             TypeCheckBody(scopeStack, (NonterminalNode<ThingType>)memberNode.Children.FirstOrDefault(a => a is NonterminalNode<ThingType> b && b.Name == "Statements"), classType);
         }
 
-        void TypeCheckBody(ScopeStack scopes, NonterminalNode<ThingType> statementsList, TypeTypes classInfo)
+        void TypeCheckBody(ScopeStack<string, TypeTypes> scopes, NonterminalNode<ThingType> statementsList, TypeTypes classInfo)
         {
             if(statementsList == null)
             { return; }

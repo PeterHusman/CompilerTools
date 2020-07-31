@@ -56,7 +56,7 @@ Statements = Statements Statement : MakeFlatList
 		   | Statement
 
 Statement = Semicolon
-	      | FunctionCall Semicolon
+	      | FunctionCall Semicolon : Identity
 		  | VarDecl : Identity
 		  | IfStatement : Identity
 		  | WhileLoop : Identity
@@ -80,7 +80,7 @@ OptStatements = Statements
 
 WhileLoop = WhileKeyword OpenParenthesis Expression CloseParenthesis OpenCurlyBrace Statements CloseCurlyBrace
 
-FunctionCall = Factor PassedParamsInParens
+FunctionCall = VarOrFieldReference PassedParamsInParens
 
 PassedParamsInParens = OpenParenthesis CloseParenthesis
 					 | OpenParenthesis PassedParamsList CloseParenthesis

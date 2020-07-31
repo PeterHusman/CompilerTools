@@ -6,15 +6,15 @@ using System.Threading.Tasks;
 
 namespace TypeChecking
 {
-    public class ScopeStack
+    public class ScopeStack<T1,T2>
     {
-        public Stack<Scope> Scopes { get; set; } = new Stack<Scope>();
+        public Stack<Scope<T1, T2>> Scopes { get; set; } = new Stack<Scope<T1, T2>>();
 
-        public Scope Current => Scopes.Peek();
+        public Scope<T1, T2> Current => Scopes.Peek();
 
-        public TypeTypes Search(string name)
+        public T2 Search(T1 name)
         {
-            foreach(Scope scope in Scopes)
+            foreach(Scope<T1, T2> scope in Scopes)
             {
                 if(scope.Types.ContainsKey(name))
                 {
@@ -22,12 +22,12 @@ namespace TypeChecking
                 }
             }
 
-            return null;
+            return default(T2);
         }
 
-        public bool TrySearch(string name, out TypeTypes type)
+        public bool TrySearch(T1 name, out T2 type)
         {
-            foreach (Scope scope in Scopes)
+            foreach (Scope<T1, T2> scope in Scopes)
             {
                 if (scope.Types.ContainsKey(name))
                 {
@@ -36,23 +36,23 @@ namespace TypeChecking
                 }
             }
 
-            type = null;
+            type = default(T2);
             return false;
         }
 
-        public Scope Pop()
+        public Scope<T1, T2> Pop()
         {
             return Scopes.Pop();
         }
 
-        public void Push(Scope toPush)
+        public void Push(Scope<T1, T2> toPush)
         {
             Scopes.Push(toPush);
         }
 
         public void PushNew()
         {
-            Scopes.Push(new Scope());
+            Scopes.Push(new Scope<T1, T2>());
         }
     }
 }

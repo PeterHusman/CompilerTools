@@ -602,7 +602,7 @@ namespace CompilerCampExercise1
             return parameters;
         }
 
-        private string FromStringToken(string value)
+        public static string FromStringToken(string value)
         {
             List<char> chars = new List<char>(value.Length);
             int state = 0;

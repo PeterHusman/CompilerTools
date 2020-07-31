@@ -79,7 +79,7 @@ namespace TypeChecking
         }
 
         public static Dictionary<string, TypeTypes> typeRefs;
-
+        public static Dictionary<NonterminalNode<ThingType>, MethodInformation> meths = new Dictionary<NonterminalNode<ThingType>, MethodInformation>();
         public static Dictionary<TypeTypes, Type> dotNetTypes;
         public static Dictionary<FieldInformation, FieldInfo> dotNetFieldInfos;
         public static Dictionary<MethodInformation, MethodInfo> dotNetMethodInfos;
@@ -196,6 +196,7 @@ namespace TypeChecking
                 {
                     //string name = member.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
                     MethodInformation method = MethodInformation.FromNonterminal(member);
+                    meths.Add(member, method);
                     if (((NonterminalNode<ThingType>)member.Children[1]).Children.Length > 0)
                     {
                         StaticMethods.Add(method);

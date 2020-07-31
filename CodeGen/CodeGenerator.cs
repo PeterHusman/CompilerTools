@@ -33,6 +33,7 @@ namespace CodeGen
         }
 
         private Dictionary<TypeTypes, TypeBuilder> types = new Dictionary<TypeTypes, TypeBuilder>();
+        private Dictionary<FieldInformation, FieldBuilder> fields = new Dictionary<FieldInformation, FieldBuilder>();
         private Dictionary<MethodInformation, MethodBuilder> methods = new Dictionary<MethodInformation, MethodBuilder>();
         private Dictionary<MethodInformation, ConstructorBuilder> ctors = new Dictionary<MethodInformation, ConstructorBuilder>();
 
@@ -53,9 +54,9 @@ namespace CodeGen
 
         public void RegisterTypes()
         {
-            foreach(var type in TypeTypes.typeRefs)
+            foreach (var type in TypeTypes.typeRefs)
             {
-                if(TypeTypes.dotNetTypes.ContainsKey(type.Value))
+                if (TypeTypes.dotNetTypes.ContainsKey(type.Value))
                 {
                     continue;
                 }
@@ -66,7 +67,7 @@ namespace CodeGen
 
         private Type TypeFromTypeType(TypeTypes type)
         {
-            if(types.ContainsKey(type))
+            if (types.ContainsKey(type))
             {
                 return types[type];
             }
@@ -76,7 +77,7 @@ namespace CodeGen
 
         public void RegisterFields()
         {
-            foreach(var type in TypeTypes.typeRefs)
+            foreach (var type in TypeTypes.typeRefs)
             {
                 if (TypeTypes.dotNetTypes.ContainsKey(type.Value))
                 {
@@ -85,12 +86,12 @@ namespace CodeGen
 
                 foreach (var fieldInfo in type.Value.Fields)
                 {
-                    types[type.Value].DefineField(fieldInfo.Key, TypeFromTypeType(fieldInfo.Value.Type), FieldAttributes.Public);
+                    fields.Add(fieldInfo.Value, types[type.Value].DefineField(fieldInfo.Key, TypeFromTypeType(fieldInfo.Value.Type), FieldAttributes.Public));
                 }
 
                 foreach (var fieldInfo in type.Value.StaticFields)
                 {
-                    types[type.Value].DefineField(fieldInfo.Key, TypeFromTypeType(fieldInfo.Value.Type), FieldAttributes.Public | FieldAttributes.Static);
+                    fields.Add(fieldInfo.Value, types[type.Value].DefineField(fieldInfo.Key, TypeFromTypeType(fieldInfo.Value.Type), FieldAttributes.Public | FieldAttributes.Static));
                 }
             }
         }
@@ -106,7 +107,7 @@ namespace CodeGen
 
                 foreach (var methInfo in type.Value.Methods)
                 {
-                    if(methInfo.Name == ".ctor")
+                    if (methInfo.Name == ".ctor")
                     {
                         ctors.Add(methInfo, types[type.Value].DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, methInfo.Parameters.Select(a => TypeFromTypeType(a.Type)).ToArray()));
                         continue;
@@ -123,18 +124,231 @@ namespace CodeGen
 
         public void GenMethods(NonterminalNode<ThingType>[] classes)
         {
-            foreach(NonterminalNode<ThingType> classNode in classes)
+            foreach (NonterminalNode<ThingType> classNode in classes)
             {
                 string name = classNode.Children.Select(a => a as Terminal<ThingType>).Where(a => a != null && a.TokenType == ThingType.Identifier).Select(a => a.TokenValue).First();
                 TypeTypes type = TypeTypes.typeRefs[name];
 
-                foreach(var method in type.Methods)
+                foreach (NonterminalNode<ThingType> member in TypeTypes.GetChild(classNode, "ClassMembers").Children)
                 {
-                    method.
+                    if (member.Name != "MethodDecl" && member.Name != "CtorDecl")
+                    {
+                        continue;
+                    }
+
+                    MethodInformation method = TypeTypes.meths[member];
+                    MethodBuilder builder = methods[method];
+                    ILGenerator ilgen = builder.GetILGenerator();
+
+                    GenFromStatements(TypeTypes.GetChild(member, "Statements"), ilgen, method, new ScopeStack<string, LocalBuilder>(), type);
                 }
 
                 types[type].CreateType();
+
+
             }
+        }
+
+        public void GenFromStatements(NonterminalNode<ThingType> statementsNode, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        {
+            if (statementsNode == null)
+            {
+                return;
+            }
+
+            locals.PushNew();
+            Scope<string, LocalBuilder> currentScope = locals.Current;
+
+            foreach (NonterminalNode<ThingType> statement in statementsNode.Children)
+            {
+                if (statement.Name == "VarDecl")
+                {
+                    TypeTypes type = TypeTypes.FromTypeNameNonterminal((NonterminalNode<ThingType>)statement.Children[0]);
+                    LocalBuilder local = generator.DeclareLocal(TypeFromTypeType(type));
+                    if (statement.Children.Length == 5)
+                    {
+                        GenExpression(statement.Children[3] as NonterminalNode<ThingType>, generator, inf, locals);
+                        currentScope.Types.Add((statement.Children[1] as Terminal<ThingType>).TokenValue, local);
+                        generator.Emit(OpCodes.Stloc, local);
+                    }
+                    else if (statement.Children.Length == 3)
+                    {
+                        currentScope.Types.Add((statement.Children[1] as Terminal<ThingType>).TokenValue, local);
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
+                }
+                else if(statement.Name == "FunctionCall")
+                {
+                    if(GenFunctionCall(statement, generator, inf, locals).Equals(TypeTypes.Void))
+                    {
+
+                    }
+                    else
+                    {
+                        generator.Emit(OpCodes.Pop);
+                    }
+                }
+            }
+        }
+
+        private TypeTypes GenFunctionCall(NonterminalNode<ThingType> nonterminalNode, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void EmitNot(ILGenerator gen)
+        {
+            gen.Emit(OpCodes.Ldc_I4, 0);
+            gen.Emit(OpCodes.Ceq);
+        }
+
+        static string FromStringToken(string value)
+        {
+            List<char> chars = new List<char>(value.Length);
+            int state = 0;
+            value = value.Substring(1, value.Length - 2);
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                switch (state)
+                {
+                    case 0:
+                        if (c == '\\')
+                        {
+                            state = 1;
+                            break;
+                        }
+
+                        chars.Add(c);
+                        break;
+                    case 1:
+                        switch (c)
+                        {
+                            case '"':
+                            case '\\':
+                            case '\'':
+                                chars.Add(c);
+                                break;
+                            case 'a':
+                                chars.Add('\a');
+                                break;
+                            case 'b':
+                                chars.Add('\b');
+                                break;
+                            case 'f':
+                                chars.Add('\f');
+                                break;
+                            case 'n':
+                                chars.Add('\n');
+                                break;
+                            case 'r':
+                                chars.Add('\r');
+                                break;
+                            case 't':
+                                chars.Add('\t');
+                                break;
+                            case 'v':
+                                chars.Add('\v');
+                                break;
+                            default:
+                                throw new Exception();
+                        }
+                        break;
+                }
+            }
+
+            return new string(chars.ToArray());
+        }
+
+        private TypeTypes GenExpression(Node node, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        {
+            if(node is Terminal<ThingType> term)
+            {
+                switch(term.TokenType)
+                {
+                    case ThingType.IntLiteral:
+                        int val = int.Parse(term.TokenValue);
+                        generator.Emit(OpCodes.Ldc_I4, val);
+                        return TypeTypes.IntType;
+                    case ThingType.BoolLiteral:
+                        bool bVal = bool.Parse(term.TokenValue);
+                        generator.Emit(OpCodes.Ldc_I4, bVal ? 1 : 0);
+                        return TypeTypes.BoolType;
+                    case ThingType.StringLiteral:
+                        string sVal = FromStringToken(term.TokenValue);
+                        generator.Emit(OpCodes.Ldstr, sVal);
+                        return TypeTypes.BoolType;
+                }
+
+                throw new Exception();
+            }
+
+            NonterminalNode<ThingType> nonterminalNode = node as NonterminalNode<ThingType>;
+
+            switch(nonterminalNode.Name)
+            {
+                case "Expression":
+                    GenExpression(nonterminalNode.Children[0], generator, inf, locals, type);
+                    GenExpression(nonterminalNode.Children[2], generator, inf, locals, type);
+                    switch ((nonterminalNode.Children[1] as Terminal<ThingType>).TokenType)
+                    {
+                        case ThingType.NotEquals:
+                            generator.Emit(OpCodes.Ceq);
+                            EmitNot(generator);
+                            break;
+                        case ThingType.Equality:
+                            generator.Emit(OpCodes.Ceq);
+                            break;
+                        case ThingType.LessThan:
+                            generator.Emit(OpCodes.Clt);
+                            break;
+                        case ThingType.GreaterThan:
+                            generator.Emit(OpCodes.Cgt);
+                            break;
+                    }
+                    break;
+                case "AddSubExpression":
+                    GenExpression(nonterminalNode.Children[0], generator, inf, locals, type);
+                    GenExpression(nonterminalNode.Children[2], generator, inf, locals, type);
+                    switch ((nonterminalNode.Children[1] as Terminal<ThingType>).TokenType)
+                    {
+                        case ThingType.PlusOperator:
+                            generator.Emit(OpCodes.Add);
+                            break;
+                        case ThingType.MinusOperator:
+                            generator.Emit(OpCodes.Sub);
+                            break;
+                    }
+                    break;
+                case "Term":
+                    GenExpression(nonterminalNode.Children[0], generator, inf, locals, type);
+                    GenExpression(nonterminalNode.Children[2], generator, inf, locals, type);
+                    switch ((nonterminalNode.Children[1] as Terminal<ThingType>).TokenType)
+                    {
+                        case ThingType.MultiplyOperator:
+                            generator.Emit(OpCodes.Mul);
+                            break;
+                        case ThingType.DivideOperator:
+                            generator.Emit(OpCodes.Div);
+                            break;
+                    }
+                    break;
+                case "FunctionCall":
+                    GenFunctionCall(nonterminalNode, generator, inf, locals, type);
+                    break;
+                case "VarOrFieldReference":
+                    GenGetFieldOrVar(nonterminalNode, generator, inf, locals, type);
+                    break;
+            }
+            throw new NotImplementedException();
+        }
+
+        private TypeTypes GenGetFieldOrVar(NonterminalNode<ThingType> nonterminalNode, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        {
+            generator.Emit(OpCodes.Ldf)
         }
     }
 }

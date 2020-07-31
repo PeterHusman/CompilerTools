@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace TypeChecking
 {
-    public class Scope
+    public class Scope<T1, T2>
     {
-        public Dictionary<string, TypeTypes> Types { get; set; } = new Dictionary<string, TypeTypes>();
+        public Dictionary<T1, T2> Types { get; set; } = new Dictionary<T1, T2>();
     }
 }

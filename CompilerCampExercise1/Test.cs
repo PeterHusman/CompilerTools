@@ -50,7 +50,7 @@
     class GuessingGame
     {
         int number;
-        GuessingGame(int minimum, int maximum, System.Random random)
+        GuessingGame(int minimum, int maximum, Random random)
         {
             number = random.Next(minimum, maximum);
         }
@@ -74,7 +74,7 @@
 
         int GoAllTheWay()
         {
-            string s = System.Console.ReadLine();
+            string s = Console.ReadLine();
             int guess = int.Parse(s);
 
             int check = CheckGuess(guess);
@@ -82,22 +82,22 @@
             {
                 if(check == -1)
                 {
-                    System.Console.WriteLine("Guess is too low.");
+                    Console.WriteLine("Guess is too low.");
                 }
                 else if(check == 1)
                 {
-                    System.Console.WriteLine("Guess is too high.");
+                    Console.WriteLine("Guess is too high.");
                 }
 
-                s = System.Console.ReadLine();
+                s = Console.ReadLine();
                 guess = int.Parse(s);
                 check = CheckGuess(guess);
             }
             
-            System.Console.WriteLine("Woo! Yay! You win!");
-            System.Console.Write("It only took you ");
-            System.Console.Write(guesses.ToString());
-            System.Console.WriteLine(" guesses!");
+            Console.WriteLine("Woo! Yay! You win!");
+            Console.Write("It only took you ");
+            Console.Write(guesses.ToString());
+            Console.WriteLine(" guesses!");
             return guesses;
         }
     }

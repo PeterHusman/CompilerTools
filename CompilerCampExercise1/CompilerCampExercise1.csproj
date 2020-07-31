@@ -85,6 +85,10 @@
       <Project>{5B68F7F2-9275-49CE-9308-A4E230520F9D}</Project>
       <Name>CauliflowerSpecifics</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CodeGen\CodeGen.csproj">
+      <Project>{ACEDA37D-6120-42A8-8691-9BB48ADEFB5D}</Project>
+      <Name>CodeGen</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ObjectExaminer\ObjectExaminer.csproj">
       <Project>{2890A39A-C9B8-468C-9903-89749B8B36D8}</Project>
       <Name>ObjectExaminer</Name>

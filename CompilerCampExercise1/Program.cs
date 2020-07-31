@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Diagnostics;
 using ObjectExaminer;
 using TypeChecking;
+using CodeGen;
 
 namespace CompilerCampExercise1
 {
@@ -99,6 +100,9 @@ namespace CompilerCampExercise1
 
             TypeChecker typeChecker = new TypeChecker();
             typeChecker.TypeCheck(root);
+
+            CodeGenerator codeGenerator = new CodeGenerator("test", "testModule", "hi.exe");
+            codeGenerator.Gen(((NonterminalNode<ThingType>)root.Children[root.Children.Length - 2]).Children.Select(a => a as NonterminalNode<ThingType>).ToArray());
             /*
             var objectExplorer = new ObjectExaminerForm();
             objectExplorer.LoadObject(root);
