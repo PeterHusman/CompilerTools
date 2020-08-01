@@ -149,7 +149,7 @@ namespace CodeGen
             }
         }
 
-        public void GenFromStatements(NonterminalNode<ThingType> statementsNode, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        public void GenFromStatements(NonterminalNode<ThingType> statementsNode, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type2)
         {
             if (statementsNode == null)
             {
@@ -167,7 +167,7 @@ namespace CodeGen
                     LocalBuilder local = generator.DeclareLocal(TypeFromTypeType(type));
                     if (statement.Children.Length == 5)
                     {
-                        GenExpression(statement.Children[3] as NonterminalNode<ThingType>, generator, inf, locals);
+                        GenExpression(statement.Children[3] as NonterminalNode<ThingType>, generator, inf, locals, type2);
                         currentScope.Types.Add((statement.Children[1] as Terminal<ThingType>).TokenValue, local);
                         generator.Emit(OpCodes.Stloc, local);
                     }
@@ -182,7 +182,7 @@ namespace CodeGen
                 }
                 else if(statement.Name == "FunctionCall")
                 {
-                    if(GenFunctionCall(statement, generator, inf, locals).Equals(TypeTypes.Void))
+                    if(GenFunctionCall(statement, generator, inf, locals, type2).Equals(TypeTypes.Void))
                     {
 
                     }
@@ -348,7 +348,180 @@ namespace CodeGen
 
         private TypeTypes GenGetFieldOrVar(NonterminalNode<ThingType> nonterminalNode, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
         {
-            generator.Emit(OpCodes.Ldf)
+            
+        }
+
+        private (Variety variety, object reference) EmitNamespaced(NonterminalNode<ThingType> namespaced, ILGenerator generator, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        {
+            if(namespaced.Children.Length == 1)
+            {
+                (Variety variety, object reference) = FindIdent(((Terminal<ThingType>)namespaced.Children[0]).TokenValue, inf, locals, type);
+
+                switch (variety)
+                {
+                    case Variety.Local:
+                        generator.Emit(OpCodes.Ldloc, (LocalBuilder)reference);
+                        break;
+                    case Variety.Param:
+                        generator.Emit(OpCodes.Ldarg, (LocalBuilder)reference);
+                        break;
+                    case Variety.Field:
+                        generator.Emit(OpCodes.Ldarg_0);
+                        generator.Emit(OpCodes.Ldfld, (FieldBuilder)reference);
+                        break;
+                    case Variety.StaticField:
+                        generator.Emit(OpCodes.Ldsfld, (FieldBuilder)reference);
+                        break;
+                    case Variety.Type:
+                        break;
+                    case Variety.Method:
+                        break;
+                    case Variety.StaticMethod:
+                        break;
+                }
+
+                return (variety, reference);
+            }
+
+
+            (Variety variety1, object reference1) = EmitNamespaced(namespaced.Children[0] as NonterminalNode<ThingType>, generator, inf, locals, type);
+
+            TypeTypes left;
+
+            Variety returnVariety;
+            object returnReference = null;
+
+            switch (variety1)
+            {
+                case Variety.Local:
+                    left = TypeTypeFromType(((LocalBuilder)reference1).LocalType);
+                    break;
+                case Variety.Param:
+                    left = (inf.Parameters[type.Methods.Contains(inf) ? (int)reference1 - 1 : (int)reference1]).Type;
+                    break;
+                case Variety.Field:
+                    left = TypeTypeFromType(((FieldBuilder)reference1).FieldType);
+                    break;
+                case Variety.StaticField:
+                    left = TypeTypeFromType(((FieldBuilder)reference1).FieldType);
+                    break;
+                case Variety.Type:
+                    left = TypeTypeFromType((Type)reference1);
+                    break;
+                case Variety.Method:
+                case Variety.StaticMethod:
+                    throw new Exception();
+                default:
+                    throw new Exception();
+            }
+
+            string name = ((Terminal<ThingType>)namespaced.Children[2]).TokenValue;
+
+            foreach (var v in left.Fields)
+            {
+                if (v.Key == name)
+                {
+                    (returnVariety, returnReference) = (Variety.Field, fields[v.Value]);
+                    break;
+                }
+            }
+
+            if(returnReference == null)
+            {
+                foreach (var v in left.Methods)
+                {
+                    if (v.Name == name)
+                    {
+                        (returnVariety, returnReference) = (Variety.Method, methods[v]);
+                        break;
+                    }
+                }
+            }
+
+            switch(returnVariety)
+            {
+                case Variety.Field:
+                    generator.Emit(OpCodes.Ldfld, (FieldBuilder)returnReference);
+                    break;
+                case Variety.Method:
+                    break;
+            }
+        }
+
+        private TypeTypes TypeTypeFromType(Type t)
+        {
+            return TypeTypes.typeRefs[t.Name];
+            //return types.First(a => a.Value == t).Key;
+        }
+
+        enum Variety
+        {
+            Local,
+            Param,
+            Field,
+            StaticField,
+            Type,
+            Method,
+            StaticMethod
+        }
+
+        private (Variety variety, object reference) FindIdent(string name, MethodInformation inf, ScopeStack<string, LocalBuilder> locals, TypeTypes type)
+        {
+            if(name == "this")
+            {
+                return (Variety.Param, 0);
+            }
+
+            if(locals.TrySearch(name, out LocalBuilder b))
+            {
+                return (Variety.Local, b);
+            }
+
+            for(int i = 0; i < inf.Parameters.Count; i++)
+            {
+                if(inf.Parameters[i].Name == name)
+                {
+                    if(type.Methods.Contains(inf))
+                    {
+                        return (Variety.Param, i + 1);
+                    }
+                    return (Variety.Param, i);
+                }
+            }
+
+            foreach(var v in type.Fields)
+            {
+                if(v.Key == name)
+                {
+                    return (Variety.Field, fields[v.Value]);
+                }
+            }
+
+            foreach (var v in type.StaticFields)
+            {
+                if (v.Key == name)
+                {
+                    return (Variety.StaticField, fields[v.Value]);
+                }
+            }
+
+            foreach (var v in type.Methods)
+            {
+                if (v.Name == name)
+                {
+                    return (Variety.Method, methods[v]);
+                }
+            }
+
+            foreach (var v in type.StaticMethods)
+            {
+                if (v.Name == name)
+                {
+                    return (Variety.StaticMethod, methods[v]);
+                }
+            }
+
+            return (Variety.Type, types[TypeTypes.typeRefs[name]]);
         }
     }
 }
